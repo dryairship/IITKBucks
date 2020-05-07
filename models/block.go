@@ -6,11 +6,11 @@ import (
 )
 
 type Block struct {
-	Index        int64
-	Timestamp    Timestamp
-	Transactions []Transaction
-	ParentHash   Hash
-	Nonce        int64
+	Index        int64         `json:"index"`
+	Timestamp    int64         `json:"timestamp"`
+	Transactions []Transaction `json:"transactions"`
+	ParentHash   Hash          `json:"parentHash"`
+	Nonce        int64         `json:"nonce"`
 }
 
 func (block Block) ToJSON() string {

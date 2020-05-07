@@ -1,7 +1,7 @@
 package models
 
 type Output struct {
-	Id        ID
-	Recipient User
-	Amount    Coins
+	Id        ID    `json:"id"`
+	Recipient User  `json:"recipient"`
+	Amount    Coins `json:"amount"`
 }
