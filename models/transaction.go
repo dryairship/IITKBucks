@@ -1,7 +1,7 @@
 package models
 
 type Transaction struct {
-	Id      ID       `json:"id"`
-	Input   Input    `json:"input"`
-	Outputs []Output `json:"outputs"`
+	Id      ID         `json:"id"`
+	Input   ID         `json:"input"`
+	Outputs OutputList `json:"outputs"`
 }
