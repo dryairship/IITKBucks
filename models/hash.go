@@ -12,6 +12,10 @@ func (hash Hash) String() string {
 	return fmt.Sprintf("%x", [32]byte(hash))
 }
 
+func (hash Hash) ToByteArray() []byte {
+	return hash[:]
+}
+
 func (hash Hash) MarshalJSON() ([]byte, error) {
 	return json.Marshal(hash.String())
 }

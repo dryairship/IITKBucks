@@ -1,3 +1,3 @@
 package models
 
-type Coins = int64
+type Coins = uint64

@@ -1,7 +1,11 @@
 package models
 
 type Transaction struct {
-	Id      ID         `json:"id"`
-	Input   ID         `json:"input"`
+	Id      Hash       `json:"id"`
+	Inputs  InputList  `json:"inputs"`
 	Outputs OutputList `json:"outputs"`
+}
+
+func (txn Transaction) ToByteArray() []byte {
+	return append(txn.Inputs.ToByteArray(), txn.Outputs.ToByteArray()...)
 }
