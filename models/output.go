@@ -13,11 +13,16 @@ type OutputList []Output
 func (output Output) ToByteArray() []byte {
 	var result []byte
 
-	result = append(result, output.Recipient.ToByteArray()...)
-
 	amtBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(amtBytes, output.Amount)
 	result = append(result, amtBytes...)
+
+	rcptByteArray := output.Recipient.ToByteArray()
+	lenBytes := make([]byte, 4)
+	binary.BigEndian.PutUint32(lenBytes, uint32(len(rcptByteArray)))
+	result = append(result, lenBytes...)
+
+	result = append(result, rcptByteArray...)
 
 	return result
 }

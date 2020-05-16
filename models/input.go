@@ -21,7 +21,12 @@ func (input Input) ToByteArray() []byte {
 	binary.BigEndian.PutUint32(indexBytes, input.OutputIndex)
 	result = append(result, indexBytes...)
 
-	result = append(result, input.Signature.ToByteArray()...)
+	sgnByteArray := input.Signature.ToByteArray()
+	lenBytes := make([]byte, 4)
+	binary.BigEndian.PutUint32(lenBytes, uint32(len(sgnByteArray)))
+	result = append(result, lenBytes...)
+
+	result = append(result, sgnByteArray...)
 
 	return result
 }
