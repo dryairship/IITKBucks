@@ -41,11 +41,6 @@ func (outputList OutputList) ToByteArray() []byte {
 	return result
 }
 
-func (outputList *OutputList) DeleteOutputAtIndex(i int) {
-	(*outputList)[i] = (*outputList)[len(*outputList)-1]
-	*outputList = (*outputList)[:len(*outputList)-1]
-}
-
 func (outputList OutputList) GetSumOfAmounts() Coins {
 	var totalCoins Coins = 0
 	for i := range outputList {

@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 )
 
@@ -16,6 +17,10 @@ func (sig Signature) ToByteArray() []byte {
 }
 
 func SignatureFromHexString(str string) (Signature, error) {
+	if str == "" {
+		return nil, errors.New("Empty string provided as signature")
+	}
+
 	signature, err := hex.DecodeString(str)
 	if err != nil {
 		return nil, err
