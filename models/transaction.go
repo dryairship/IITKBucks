@@ -10,6 +10,8 @@ type Transaction struct {
 	Outputs OutputList `json:"outputs"`
 }
 
+type TransactionList []Transaction
+
 func (txn *Transaction) AddInput(input Input) {
 	txn.Inputs = append(txn.Inputs, input)
 }
@@ -25,4 +27,8 @@ func (txn Transaction) ToByteArray() []byte {
 func (txn Transaction) CalculateHash() Hash {
 	hash := sha256.Sum256(txn.ToByteArray())
 	return hash
+}
+
+func (txn Transaction) CalculateOutputDataHash() Hash {
+	return sha256.Sum256(txn.Outputs.ToByteArray())
 }

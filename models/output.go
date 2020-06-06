@@ -8,7 +8,10 @@ type Output struct {
 	Recipient User  `json:"recipient"`
 	Amount    Coins `json:"amount"`
 }
+
 type OutputList []Output
+
+type OutputMap = map[TransactionIdIndexPair]Output
 
 func (output Output) ToByteArray() []byte {
 	var result []byte
