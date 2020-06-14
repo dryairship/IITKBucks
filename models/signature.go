@@ -4,6 +4,7 @@ import (
 	"crypto"
 	"crypto/rsa"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 )
@@ -17,6 +18,10 @@ var unlockOptions = rsa.PSSOptions{
 
 func (sig Signature) String() string {
 	return fmt.Sprintf("%x", []byte(sig))
+}
+
+func (sig Signature) MarshalJSON() ([]byte, error) {
+	return json.Marshal(sig.String())
 }
 
 func (sig Signature) ToByteArray() []byte {

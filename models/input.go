@@ -5,12 +5,19 @@ import (
 )
 
 type Input struct {
-	TransactionId Hash
-	OutputIndex   uint32
-	Signature     Signature
+	TransactionId Hash      `json:"transactionId"`
+	OutputIndex   uint32    `json:"index"`
+	Signature     Signature `json:"signature"`
+}
+
+type InputRequestBody struct {
+	TransactionId string `json:"transactionId" binding:"required"`
+	OutputIndex   uint32 `json:"index" binding:"required"`
+	Signature     string `json:"signature" binding:"required"`
 }
 
 type InputList []Input
+type InputListRequestBody []InputRequestBody
 
 func (input Input) ToByteArray() []byte {
 	var result []byte
@@ -43,4 +50,34 @@ func (inputList InputList) ToByteArray() []byte {
 	}
 
 	return result
+}
+
+func (inputRequestBody InputRequestBody) ToInput() (Input, error) {
+	txid, err := HashFromHexString(inputRequestBody.TransactionId)
+	if err != nil {
+		return Input{}, err
+	}
+
+	sign, err := SignatureFromHexString(inputRequestBody.Signature)
+	if err != nil {
+		return Input{}, err
+	}
+
+	return Input{
+		TransactionId: txid,
+		Signature:     sign,
+		OutputIndex:   inputRequestBody.OutputIndex,
+	}, nil
+}
+
+func (inputListRequestBody InputListRequestBody) ToInputList() (InputList, error) {
+	var inputList InputList
+	for _, inputRequestBody := range inputListRequestBody {
+		input, err := inputRequestBody.ToInput()
+		if err != nil {
+			return inputList, err
+		}
+		inputList = append(inputList, input)
+	}
+	return inputList, nil
 }

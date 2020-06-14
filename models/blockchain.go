@@ -1,23 +1,28 @@
 package models
 
-type Blockchain struct {
+type blockchain struct {
 	Chain                    []Block
 	UnusedTransactionOutputs OutputMap
 	PendingTransactions      TransactionList
 	CurrentTarget            Hash
 }
 
-func NewBlockchain() *Blockchain {
-	return &Blockchain{
-		Chain: []Block{*NewGenesisBlock()},
+var blockchainInstance *blockchain
+
+func Blockchain() *blockchain {
+	if blockchainInstance == nil {
+		blockchainInstance = &blockchain{
+			Chain: []Block{*NewGenesisBlock()},
+		}
 	}
+	return blockchainInstance
 }
 
-func (blockchain *Blockchain) AppendBlock(block Block) {
+func (blockchain *blockchain) AppendBlock(block Block) {
 	blockchain.Chain = append(blockchain.Chain, block)
 }
 
-func (blockchain Blockchain) IsTransactionValid(transaction *Transaction) bool {
+func (blockchain *blockchain) IsTransactionValid(transaction *Transaction) bool {
 	outputDataHash := transaction.CalculateOutputDataHash()
 	sumOfInputs := uint64(0)
 
@@ -38,7 +43,7 @@ func (blockchain Blockchain) IsTransactionValid(transaction *Transaction) bool {
 	return sumOfOutputs <= sumOfInputs
 }
 
-func (blockchain Blockchain) IsBlockValid(block *Block) bool {
+func (blockchain *blockchain) IsBlockValid(block *Block) bool {
 	if block.Index != len(blockchain.Chain)+1 {
 		return false
 	}
@@ -64,4 +69,8 @@ func (blockchain Blockchain) IsBlockValid(block *Block) bool {
 	}
 
 	return true
+}
+
+func (blockchain *blockchain) AddTransaction(transaction Transaction) {
+	blockchain.PendingTransactions = append(blockchain.PendingTransactions, transaction)
 }

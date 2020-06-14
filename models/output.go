@@ -9,7 +9,13 @@ type Output struct {
 	Amount    Coins `json:"amount"`
 }
 
+type OutputRequestBody struct {
+	Recipient string `json:"recipient" binding:"required"`
+	Amount    uint64 `json:"amount" binding:"required"`
+}
+
 type OutputList []Output
+type OutputListRequestBody []OutputRequestBody
 
 type OutputMap = map[TransactionIdIndexPair]Output
 
@@ -50,4 +56,19 @@ func (outputList OutputList) GetSumOfAmounts() Coins {
 		totalCoins += outputList[i].Amount
 	}
 	return totalCoins
+}
+
+func (outputRequestBody OutputRequestBody) ToOutput() Output {
+	return Output{
+		Recipient: User(outputRequestBody.Recipient),
+		Amount:    Coins(outputRequestBody.Amount),
+	}
+}
+
+func (outputListRequestBody OutputListRequestBody) ToOutputList() OutputList {
+	var outputList OutputList
+	for _, outputRequestBody := range outputListRequestBody {
+		outputList = append(outputList, outputRequestBody.ToOutput())
+	}
+	return outputList
 }
