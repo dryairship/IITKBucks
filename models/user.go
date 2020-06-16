@@ -4,7 +4,6 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
-	"errors"
 )
 
 type User string
@@ -16,7 +15,7 @@ func (user User) ToByteArray() []byte {
 func (user User) GetPublicKey() (*rsa.PublicKey, error) {
 	data, _ := pem.Decode(user.ToByteArray())
 	if data == nil {
-		return nil, errors.New("failed to parse PEM block containing the key")
+		return nil, ERROR_INVALID_PEM_BLOCK
 	}
 
 	pub, err := x509.ParsePKIXPublicKey(data.Bytes)
@@ -30,5 +29,5 @@ func (user User) GetPublicKey() (*rsa.PublicKey, error) {
 	default:
 		break
 	}
-	return nil, errors.New("Key type is not RSA")
+	return nil, ERROR_NOT_RSA_KEY
 }

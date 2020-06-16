@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 )
 
@@ -23,7 +22,7 @@ func HashFromHexString(str string) (Hash, error) {
 	}
 
 	if len(hashSlice) != 32 {
-		return [32]byte{}, errors.New("string does not represent a hash. Reason: Incorrect length")
+		return [32]byte{}, ERROR_INCORRECT_HASH_STRING_LENGTH
 	}
 
 	copy(hash[:], hashSlice[:32])

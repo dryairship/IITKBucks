@@ -5,7 +5,6 @@ import (
 	"crypto/rsa"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 )
 
@@ -30,7 +29,7 @@ func (sig Signature) ToByteArray() []byte {
 
 func SignatureFromHexString(str string) (Signature, error) {
 	if str == "" {
-		return nil, errors.New("Empty string provided as signature")
+		return nil, ERROR_EMPTY_SIGNATURE_STRING
 	}
 
 	signature, err := hex.DecodeString(str)
