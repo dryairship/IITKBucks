@@ -1,9 +1,10 @@
 # IITKBucks
 
+[![Project Status: WIP – Initial development is in progress, but there has not yet been any release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 ![Go version](https://img.shields.io/github/go-mod/go-version/dryairship/IITKBucks) 
 [![Travis CI Build Status](https://img.shields.io/travis/dryairship/IITKBucks)](https://travis-ci.org/github/dryairship/IITKBucks) 
 [![Codecov](https://img.shields.io/codecov/c/github/dryairship/IITKBucks)](https://codecov.io/gh/dryairship/IITKBucks) 
-[![LICENSE](https://img.shields.io/github/license/dryairship/IITKBucks)](https://github.com/dryairship/IITKBucks/blob/master/LICENSE)
+[![LICENSE](https://img.shields.io/github/license/dryairship/IITKBucks?color=purple)](https://github.com/dryairship/IITKBucks/blob/master/LICENSE)
 
 
 IITKBucks is a cryprocurrency project that I am mentoring as a part
