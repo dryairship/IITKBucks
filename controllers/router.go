@@ -12,7 +12,12 @@ func pingHandler(c *gin.Context) {
 
 func SetUpRoutes(router *gin.Engine) {
 	router.GET("/ping", pingHandler)
+
 	router.Static("/getBlock", "./blocks")
+
+	router.GET("/getPeers", getPeersHandler)
+	router.POST("/newPeer", newPeerHandler)
+
 	router.GET("/getPendingTransactions", pendingTransactionsHandler)
 	router.POST("/newTransaction", newTransactionsHandler)
 }
