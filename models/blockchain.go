@@ -44,7 +44,7 @@ func (blockchain *blockchain) IsTransactionValid(transaction *Transaction) bool 
 }
 
 func (blockchain *blockchain) IsBlockValid(block *Block) bool {
-	if block.Index != len(blockchain.Chain)+1 {
+	if block.Index != uint32(len(blockchain.Chain)+1) {
 		return false
 	}
 

@@ -52,6 +52,51 @@ func (inputList InputList) ToByteArray() []byte {
 	return result
 }
 
+func InputFromByteArray(data []byte) (Input, int, error) {
+	if len(data) < 40 {
+		return Input{}, 0, ERROR_INSUFFICIENT_DATA
+	}
+
+	var txnID Hash
+	copy(txnID[:], data[:32])
+
+	outputIndex := binary.BigEndian.Uint32(data[32:36])
+	sigSize := int(binary.BigEndian.Uint32(data[36:40]))
+
+	if len(data) < sigSize+40 {
+		return Input{}, 0, ERROR_INSUFFICIENT_DATA
+	}
+
+	sign := Signature(data[40:sigSize])
+
+	return Input{
+		TransactionId: txnID,
+		OutputIndex:   outputIndex,
+		Signature:     sign,
+	}, sigSize + 40, nil
+}
+
+func InputListFromByteArray(data []byte) (InputList, int, error) {
+	if len(data) < 4 {
+		return nil, 0, ERROR_INSUFFICIENT_DATA
+	}
+
+	numInputs := binary.BigEndian.Uint32(data[:4])
+	currentOffset := 4
+
+	var list InputList
+	for i := uint32(0); i < numInputs; i++ {
+		input, bytesRead, err := InputFromByteArray(data[currentOffset:])
+		if err != nil {
+			return list, 0, err
+		}
+		list = append(list, input)
+		currentOffset += bytesRead
+	}
+
+	return list, currentOffset, nil
+}
+
 func (inputRequestBody InputRequestBody) ToInput() (Input, error) {
 	txid, err := HashFromHexString(inputRequestBody.TransactionId)
 	if err != nil {

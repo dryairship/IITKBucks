@@ -2,6 +2,7 @@ package models
 
 import (
 	"crypto/sha256"
+	"encoding/binary"
 )
 
 type Transaction struct {
@@ -37,6 +38,55 @@ func (txn *Transaction) CalculateHash() Hash {
 
 func (txn Transaction) CalculateOutputDataHash() Hash {
 	return sha256.Sum256(txn.Outputs.ToByteArray())
+}
+
+func TransactionFromByteArray(data []byte) (Transaction, error) {
+	inputList, bytesRead, err := InputListFromByteArray(data)
+	if err != nil {
+		return Transaction{}, err
+	}
+
+	outputList, _, err := OutputListFromByteArray(data[bytesRead:])
+	if err != nil {
+		return Transaction{}, err
+	}
+
+	txn := Transaction{
+		Inputs:  inputList,
+		Outputs: outputList,
+	}
+
+	txn.CalculateHash()
+	return txn, nil
+}
+
+func TransactionListFromByteArray(data []byte) (TransactionList, error) {
+	if len(data) < 4 {
+		return nil, ERROR_INSUFFICIENT_DATA
+	}
+
+	numTransactions := binary.BigEndian.Uint32(data[:4])
+	currentOffset := 4
+
+	var list TransactionList
+	for i := uint32(0); i < numTransactions; i++ {
+		if len(data) < currentOffset+4 {
+			return nil, ERROR_INSUFFICIENT_DATA
+		}
+
+		txnSize := int(binary.BigEndian.Uint32(data[currentOffset : currentOffset+4]))
+		currentOffset += 4
+		if len(data) < currentOffset+txnSize {
+			return nil, ERROR_INSUFFICIENT_DATA
+		}
+
+		txn, err := TransactionFromByteArray(data[currentOffset : currentOffset+txnSize])
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, txn)
+	}
+	return list, nil
 }
 
 func (txnRequestBody *TransactionRequestBody) ToTransaction() (Transaction, error) {

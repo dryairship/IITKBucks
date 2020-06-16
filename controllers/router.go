@@ -14,6 +14,7 @@ func SetUpRoutes(router *gin.Engine) {
 	router.GET("/ping", pingHandler)
 
 	router.Static("/getBlock", "./blocks")
+	router.POST("/newBlock", newBlockHandler)
 
 	router.GET("/getPeers", getPeersHandler)
 	router.POST("/newPeer", newPeerHandler)
