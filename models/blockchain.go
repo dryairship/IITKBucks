@@ -58,6 +58,14 @@ func (blockchain *blockchain) IsBlockValid(block *Block) bool {
 		return false
 	}
 
+	if block.Target != blockchain.CurrentTarget {
+		return false
+	}
+
+	if block.BodyHash != block.GetBodyHash() {
+		return false
+	}
+
 	if !block.GetHash().IsLessThan(blockchain.CurrentTarget) {
 		return false
 	}

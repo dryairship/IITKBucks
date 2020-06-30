@@ -10,11 +10,12 @@ import (
 type Block struct {
 	Id           ID              `json:"_"`
 	Index        uint32          `json:"index"`
-	Timestamp    int64           `json:"timestamp"`
-	Transactions TransactionList `json:"transactions"`
 	ParentHash   Hash            `json:"parentHash"`
+	BodyHash     Hash            `json:"bodyHash"`
 	Target       Hash            `json:"target"`
+	Timestamp    int64           `json:"timestamp"`
 	Nonce        int64           `json:"nonce"`
+	Transactions TransactionList `json:"transactions"`
 }
 
 func NewGenesisBlock() *Block {
@@ -33,9 +34,7 @@ func (block Block) ToJSON() string {
 }
 
 func (block Block) GetHash() Hash {
-	bytes := []byte(block.ToJSON())
-	sum := sha256.Sum256(bytes)
-	return sum
+	return sha256.Sum256(block.CalculateHeader(false))
 }
 
 func BlockFromByteArray(data []byte) (Block, error) {
@@ -45,9 +44,9 @@ func BlockFromByteArray(data []byte) (Block, error) {
 
 	index := binary.BigEndian.Uint32(data[:4])
 
-	var parentHash, blockHash, target Hash
+	var parentHash, bodyHash, target Hash
 	copy(parentHash[:], data[4:36])
-	copy(blockHash[:], data[36:68])
+	copy(bodyHash[:], data[36:68])
 	copy(target[:], data[68:100])
 
 	timestamp := int64(binary.BigEndian.Uint64(data[100:108]))
@@ -59,12 +58,44 @@ func BlockFromByteArray(data []byte) (Block, error) {
 	}
 
 	return Block{
-		Id:           blockHash,
 		Index:        index,
 		Timestamp:    timestamp,
 		Transactions: transactions,
 		ParentHash:   parentHash,
+		BodyHash:     bodyHash,
 		Target:       target,
 		Nonce:        nonce,
 	}, nil
+}
+
+func (block Block) GetBodyHash() Hash {
+	return sha256.Sum256(block.Transactions.ToByteArray())
+}
+
+func (block Block) CalculateHeader(recalculateBodyHash bool) []byte {
+	var result []byte
+
+	fourBytes := make([]byte, 4)
+	binary.BigEndian.PutUint32(fourBytes, block.Index)
+	result = append(result, fourBytes...)
+
+	result = append(result, block.ParentHash[:]...)
+
+	if recalculateBodyHash {
+		bodyHash := block.GetBodyHash()
+		result = append(result, bodyHash[:]...)
+	} else {
+		result = append(result, block.BodyHash[:]...)
+	}
+
+	result = append(result, block.Target[:]...)
+
+	eightBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(eightBytes, uint64(block.Timestamp))
+	result = append(result, eightBytes...)
+
+	binary.BigEndian.PutUint64(eightBytes, uint64(block.Nonce))
+	result = append(result, eightBytes...)
+
+	return result
 }

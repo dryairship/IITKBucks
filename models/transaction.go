@@ -30,6 +30,23 @@ func (txn Transaction) ToByteArray() []byte {
 	return append(txn.Inputs.ToByteArray(), txn.Outputs.ToByteArray()...)
 }
 
+func (txnList TransactionList) ToByteArray() []byte {
+	var result []byte
+
+	lenBytes := make([]byte, 4)
+	binary.BigEndian.PutUint32(lenBytes, uint32(len(txnList)))
+	result = append(result, lenBytes...)
+
+	for i := range txnList {
+		txn := txnList[i].ToByteArray()
+		binary.BigEndian.PutUint32(lenBytes, uint32(len(txn)))
+		result = append(result, lenBytes...)
+		result = append(result, txn...)
+	}
+
+	return result
+}
+
 func (txn *Transaction) CalculateHash() Hash {
 	hash := sha256.Sum256(txn.ToByteArray())
 	txn.Id = hash
