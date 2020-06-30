@@ -17,6 +17,7 @@ type TransactionRequestBody struct {
 }
 
 type TransactionList []Transaction
+type TransactionMap map[Hash]Transaction
 
 func (txn *Transaction) AddInput(input Input) {
 	txn.Inputs = append(txn.Inputs, input)

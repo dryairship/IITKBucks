@@ -9,3 +9,4 @@ var ERROR_INCORRECT_HASH_STRING_LENGTH = errors.New("string does not have the co
 var ERROR_EMPTY_SIGNATURE_STRING = errors.New("string is empty, cannot represent a signature")
 var ERROR_NOT_RSA_KEY = errors.New("the key is not an RSA key")
 var ERROR_INVALID_PEM_BLOCK = errors.New("PEM block is invalid")
+var ERROR_INVALID_BLOCK = errors.New("Invalid Block")

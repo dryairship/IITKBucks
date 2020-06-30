@@ -3,7 +3,7 @@ package models
 type blockchain struct {
 	Chain                    []Block
 	UnusedTransactionOutputs OutputMap
-	PendingTransactions      TransactionList
+	PendingTransactions      TransactionMap
 	CurrentTarget            Hash
 }
 
@@ -19,10 +19,20 @@ func Blockchain() *blockchain {
 }
 
 func (blockchain *blockchain) AppendBlock(block Block) {
+	block.Transactions = nil
 	blockchain.Chain = append(blockchain.Chain, block)
 }
 
-func (blockchain *blockchain) IsTransactionValid(transaction *Transaction) bool {
+func (blockchain *blockchain) IsTransactionPending(transactionHash Hash) bool {
+	_, exists := blockchain.PendingTransactions[transactionHash]
+	return exists
+}
+
+func (blockchain *blockchain) IsTransactionValid(transaction *Transaction) (bool, Coins) {
+	if !blockchain.IsTransactionPending(transaction.CalculateHash()) {
+		return false, 0
+	}
+
 	outputDataHash := transaction.CalculateOutputDataHash()
 	sumOfInputs := uint64(0)
 
@@ -33,14 +43,14 @@ func (blockchain *blockchain) IsTransactionValid(transaction *Transaction) bool 
 
 		output, exists := blockchain.UnusedTransactionOutputs[pair]
 		if !exists || !input.Signature.Unlock(&output, &outputDataHash) {
-			return false
+			return false, 0
 		}
 
 		sumOfInputs += output.Amount
 	}
 
 	sumOfOutputs := transaction.Outputs.GetSumOfAmounts()
-	return sumOfOutputs <= sumOfInputs
+	return sumOfOutputs <= sumOfInputs, sumOfInputs - sumOfOutputs
 }
 
 func (blockchain *blockchain) IsBlockValid(block *Block) bool {
@@ -70,15 +80,44 @@ func (blockchain *blockchain) IsBlockValid(block *Block) bool {
 		return false
 	}
 
+	var totalFee Coins
 	for i := range block.Transactions {
-		if !blockchain.IsTransactionValid(&block.Transactions[i]) {
+		if i == 0 {
+			continue
+		}
+		valid, txnFee := blockchain.IsTransactionValid(&block.Transactions[i])
+		if !valid {
 			return false
 		}
+		totalFee += txnFee
 	}
 
-	return true
+	return totalFee >= block.Transactions[0].Outputs.GetSumOfAmounts()
 }
 
 func (blockchain *blockchain) AddTransaction(transaction Transaction) {
-	blockchain.PendingTransactions = append(blockchain.PendingTransactions, transaction)
+	blockchain.PendingTransactions[transaction.CalculateHash()] = transaction
+}
+
+func (blockchain *blockchain) ProcessBlock(block Block) {
+	for _, txn := range block.Transactions {
+		delete(blockchain.PendingTransactions, txn.CalculateHash())
+
+		for _, input := range txn.Inputs {
+			txidIndexPair := TransactionIdIndexPair{
+				TransactionId: input.TransactionId,
+				Index:         input.OutputIndex,
+			}
+			delete(blockchain.UnusedTransactionOutputs, txidIndexPair)
+		}
+
+		txidIndexPair := TransactionIdIndexPair{
+			TransactionId: txn.Id,
+			Index:         0,
+		}
+		for i, output := range txn.Outputs {
+			txidIndexPair.Index = uint32(i)
+			blockchain.UnusedTransactionOutputs[txidIndexPair] = output
+		}
+	}
 }
