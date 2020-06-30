@@ -12,6 +12,7 @@ import (
 func main() {
 	router := gin.Default()
 	controllers.SetUpRoutes(router)
+	controllers.PerformInitialization()
 
 	err := router.Run(fmt.Sprintf(":%s", config.PORT))
 	if err != nil {

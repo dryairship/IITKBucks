@@ -1,1 +1,5 @@
 port: 8000
+myUrl: "http://localhost:8000"
+maxPeers: 5
+potentialPeers:
+  - "http://localhost:8001"
