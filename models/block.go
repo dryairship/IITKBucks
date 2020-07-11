@@ -44,6 +44,11 @@ func (block Block) ToJSON() string {
 	return string(json)
 }
 
+func (block Block) ToByteArray() []byte {
+	header := block.CalculateHeader(false)
+	return append(header, block.Transactions.ToByteArray()...)
+}
+
 func (block Block) GetHash() Hash {
 	return sha256.Sum256(block.CalculateHeader(false))
 }

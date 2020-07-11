@@ -1,6 +1,11 @@
 package controllers
 
 import (
+	"bytes"
+	"fmt"
+	"log"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/dryairship/IITKBucks/models"
@@ -30,6 +35,39 @@ func newBlockHandler(c *gin.Context) {
 	c.Status(200)
 }
 
+func propagateBlockToPeers(block models.Block) {
+	blockBytes := block.ToByteArray()
+	buffer := bytes.NewBuffer(blockBytes)
+	client := &http.Client{}
+
+	count := 0
+
+	for _, peer := range peers {
+		req, err := http.NewRequest("POST", fmt.Sprintf("%s/newBlock", peer), buffer)
+		if err != nil {
+			log.Println("[ERROR] go HTTP error while builing newBlock request. Peer: ", peer, ", Error: ", err)
+			continue
+		}
+		req.Header.Set("Content-Type", "application/octet-stream")
+
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Println("[ERROR] go HTTP error while making newBlock request. Peer: ", peer, ", Error: ", err)
+			continue
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			var reply []byte
+			_, _ = resp.Body.Read(reply)
+			log.Printf("[WARNING] Peer %s gave %d response on newBlock request. %s\n", peer, resp.StatusCode, reply)
+		} else {
+			count++
+		}
+	}
+	log.Printf("[INFO] Successfully sent newBlock requests to %d peers.\n", count)
+}
+
 func performPostNewBlockSteps(newBlock models.Block) {
 	models.Blockchain().ProcessBlock(newBlock)
 	models.Blockchain().AppendBlock(newBlock)
@@ -38,4 +76,5 @@ func performPostNewBlockSteps(newBlock models.Block) {
 	currentMinerChannel = make(chan bool)
 
 	go startMining()
+	go propagateBlockToPeers(newBlock)
 }
