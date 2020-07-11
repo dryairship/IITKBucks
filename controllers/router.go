@@ -19,6 +19,9 @@ func SetUpRoutes(router *gin.Engine) {
 	router.GET("/getPeers", getPeersHandler)
 	router.POST("/newPeer", newPeerHandler)
 
+	router.POST("/addAlias", addAliasHandler)
+	router.POST("/getPublicKey", getPublicKeyHandler)
+
 	router.GET("/getPendingTransactions", pendingTransactionsHandler)
 	router.POST("/newTransaction", newTransactionsHandler)
 }
