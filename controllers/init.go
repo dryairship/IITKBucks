@@ -2,6 +2,9 @@ package controllers
 
 import (
 	"log"
+
+	"github.com/dryairship/IITKBucks/config"
+	"github.com/dryairship/IITKBucks/models"
 )
 
 func performNoobInitialization() {
@@ -13,6 +16,15 @@ func performNoobInitialization() {
 	}
 }
 
+func performProInitialization() {
+	genesisBlock := models.NewGenesisBlock()
+	log.Printf("%+v\n", genesisBlock)
+}
+
 func PerformInitialization() {
-	performNoobInitialization()
+	if config.IS_PRO {
+		performProInitialization()
+	} else {
+		performNoobInitialization()
+	}
 }

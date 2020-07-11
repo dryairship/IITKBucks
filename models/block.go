@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/json"
-	"time"
 )
 
 type Block struct {
@@ -19,10 +18,22 @@ type Block struct {
 }
 
 func NewGenesisBlock() *Block {
-	return &Block{
-		Index:     0,
-		Timestamp: time.Now().UnixNano(),
+	output := Output{
+		Amount:    Blockchain().CurrentBlockReward,
+		Recipient: MyUser,
 	}
+	outputList := OutputList{output}
+	transaction := Transaction{
+		Outputs: outputList,
+	}
+	transaction.CalculateHash()
+	transactionList := TransactionList{transaction}
+	block := Block{
+		Index:        0,
+		Target:       Blockchain().CurrentTarget,
+		Transactions: transactionList,
+	}
+	return &block
 }
 
 func (block Block) ToJSON() string {
@@ -72,7 +83,7 @@ func (block Block) GetBodyHash() Hash {
 	return sha256.Sum256(block.Transactions.ToByteArray())
 }
 
-func (block Block) CalculateHeader(recalculateBodyHash bool) []byte {
+func (block *Block) CalculateHeader(recalculateBodyHash bool) []byte {
 	var result []byte
 
 	fourBytes := make([]byte, 4)
@@ -83,6 +94,7 @@ func (block Block) CalculateHeader(recalculateBodyHash bool) []byte {
 
 	if recalculateBodyHash {
 		bodyHash := block.GetBodyHash()
+		block.BodyHash = bodyHash
 		result = append(result, bodyHash[:]...)
 	} else {
 		result = append(result, block.BodyHash[:]...)

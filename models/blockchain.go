@@ -1,18 +1,29 @@
 package models
 
+import (
+	"github.com/dryairship/IITKBucks/config"
+)
+
 type blockchain struct {
 	Chain                    []Block
 	UnusedTransactionOutputs OutputMap
 	PendingTransactions      TransactionMap
 	CurrentTarget            Hash
+	CurrentBlockReward       Coins
 }
 
 var blockchainInstance *blockchain
 
 func Blockchain() *blockchain {
 	if blockchainInstance == nil {
+		target, err := HashFromHexString(config.INITIAL_TARGET)
+		if err != nil {
+			panic(err)
+		}
 		blockchainInstance = &blockchain{
-			Chain: []Block{*NewGenesisBlock()},
+			Chain:              make([]Block, 0),
+			CurrentTarget:      target,
+			CurrentBlockReward: Coins(config.INITIAL_BLOCK_REWARD),
 		}
 	}
 	return blockchainInstance

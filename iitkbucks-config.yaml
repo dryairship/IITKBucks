@@ -1,5 +1,12 @@
 port: 8000
+
 myUrl: "http://localhost:8000"
+myPublicKey: "Some public key"
+
+isPro: true
+initialTarget: "00000f0000000000000000000000000000000000000000000000000000000000"
+initialBlockReward: 10000
+
 maxPeers: 5
 potentialPeers:
   - "http://localhost:8001"

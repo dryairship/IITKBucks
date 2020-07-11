@@ -4,9 +4,13 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+
+	"github.com/dryairship/IITKBucks/config"
 )
 
 type User string
+
+var MyUser = User(config.MY_PUBLIC_KEY)
 
 func (user User) ToByteArray() []byte {
 	return []byte(user)
