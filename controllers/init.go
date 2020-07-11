@@ -7,6 +7,8 @@ import (
 	"github.com/dryairship/IITKBucks/models"
 )
 
+var currentMinerChannel chan bool
+
 func performNoobInitialization() {
 	c := make(chan bool)
 	go tryToAddPeers(c)
@@ -18,7 +20,14 @@ func performNoobInitialization() {
 
 func performProInitialization() {
 	genesisBlock := models.NewGenesisBlock()
-	log.Printf("%+v\n", genesisBlock)
+	currentMinerChannel = make(chan bool)
+	go mineBlock(genesisBlock)
+	signal := <-currentMinerChannel
+	if signal {
+		log.Println("[INFO] Genesis block mined successfully.")
+	} else {
+		log.Fatal("[ERROR] Could not mine genesis block.")
+	}
 }
 
 func PerformInitialization() {

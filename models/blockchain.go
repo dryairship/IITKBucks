@@ -10,6 +10,7 @@ type blockchain struct {
 	PendingTransactions      TransactionMap
 	CurrentTarget            Hash
 	CurrentBlockReward       Coins
+	TransactionAdded         chan bool
 }
 
 var blockchainInstance *blockchain
@@ -21,9 +22,12 @@ func Blockchain() *blockchain {
 			panic(err)
 		}
 		blockchainInstance = &blockchain{
-			Chain:              make([]Block, 0),
-			CurrentTarget:      target,
-			CurrentBlockReward: Coins(config.INITIAL_BLOCK_REWARD),
+			Chain:                    make([]Block, 0),
+			UnusedTransactionOutputs: make(OutputMap),
+			PendingTransactions:      make(TransactionMap),
+			CurrentTarget:            target,
+			CurrentBlockReward:       Coins(config.INITIAL_BLOCK_REWARD),
+			TransactionAdded:         make(chan bool),
 		}
 	}
 	return blockchainInstance
@@ -107,6 +111,7 @@ func (blockchain *blockchain) IsBlockValid(block *Block) bool {
 }
 
 func (blockchain *blockchain) AddTransaction(transaction Transaction) {
+	blockchain.TransactionAdded <- true
 	blockchain.PendingTransactions[transaction.CalculateHash()] = transaction
 }
 

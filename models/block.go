@@ -17,7 +17,7 @@ type Block struct {
 	Transactions TransactionList `json:"transactions"`
 }
 
-func NewGenesisBlock() *Block {
+func NewGenesisBlock() Block {
 	output := Output{
 		Amount:    Blockchain().CurrentBlockReward,
 		Recipient: MyUser,
@@ -33,7 +33,7 @@ func NewGenesisBlock() *Block {
 		Target:       Blockchain().CurrentTarget,
 		Transactions: transactionList,
 	}
-	return &block
+	return block
 }
 
 func (block Block) ToJSON() string {

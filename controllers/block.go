@@ -26,7 +26,16 @@ func newBlockHandler(c *gin.Context) {
 		return
 	}
 
-	models.Blockchain().ProcessBlock(block)
-	models.Blockchain().AppendBlock(block)
+	performPostNewBlockSteps(block)
 	c.Status(200)
+}
+
+func performPostNewBlockSteps(newBlock models.Block) {
+	models.Blockchain().ProcessBlock(newBlock)
+	models.Blockchain().AppendBlock(newBlock)
+
+	close(currentMinerChannel)
+	currentMinerChannel = make(chan bool)
+
+	go startMining()
 }
