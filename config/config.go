@@ -1,6 +1,7 @@
 package config
 
 import (
+	"io/ioutil"
 	"log"
 
 	"github.com/spf13/viper"
@@ -36,7 +37,13 @@ func init() {
 	BLOCKS_PATH = viper.GetString("blocksPath")
 
 	MY_URL = viper.GetString("myUrl")
-	MY_PUBLIC_KEY = viper.GetString("myPublicKey")
+
+	myPublicKeyFile := viper.GetString("myPublicKeyFile")
+	publicKey, err := ioutil.ReadFile(myPublicKeyFile)
+	if err != nil {
+		log.Fatal("Could not read my public key: ", myPublicKeyFile)
+	}
+	MY_PUBLIC_KEY = string(publicKey)
 
 	IS_PRO = viper.GetBool("isPro")
 	INITIAL_TARGET = viper.GetString("initialTarget")

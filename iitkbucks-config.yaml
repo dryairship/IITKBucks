@@ -3,7 +3,7 @@ port: 8000
 blocksPath: ./blocks
 
 myUrl: "http://localhost:8000"
-myPublicKey: "Some public key"
+myPublicKeyFile: "./keys/public.pem"
 
 isPro: true
 initialTarget: "00000f0000000000000000000000000000000000000000000000000000000000"
