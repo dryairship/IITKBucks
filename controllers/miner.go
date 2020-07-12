@@ -33,19 +33,22 @@ func createCandidateBlock() models.Block {
 
 	var pair models.TransactionIdIndexPair
 	for _, txn := range pendingTxns {
+		inputSum := uint64(0)
 		isTxnValid := true
 		for _, input := range txn.Inputs {
 			pair.TransactionId = input.TransactionId
 			pair.Index = input.OutputIndex
-			_, exists := unusedOutputs[pair]
+			input, exists := unusedOutputs[pair]
 			if !exists {
 				isTxnValid = false
 				break
 			}
+			inputSum += input.Amount
 		}
 
 		if isTxnValid {
 			if currentSize+len(txn.ToByteArray()) <= 1000000 {
+				coinbaseTxn.Outputs[0].Amount += inputSum - txn.Outputs.GetSumOfAmounts()
 				currentTxns = append(currentTxns, txn)
 			} else {
 				break
