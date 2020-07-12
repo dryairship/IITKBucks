@@ -24,4 +24,6 @@ func SetUpRoutes(router *gin.Engine) {
 
 	router.GET("/getPendingTransactions", pendingTransactionsHandler)
 	router.POST("/newTransaction", newTransactionsHandler)
+
+	router.POST("/getUnusedOutputs", getUnusedOutputsHandler)
 }

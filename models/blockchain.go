@@ -11,6 +11,7 @@ type blockchain struct {
 	CurrentTarget            Hash
 	CurrentBlockReward       Coins
 	TransactionAdded         chan bool
+	UserOutputs              map[User][]TransactionIdIndexPair
 }
 
 var blockchainInstance *blockchain
@@ -28,6 +29,7 @@ func Blockchain() *blockchain {
 			CurrentTarget:            target,
 			CurrentBlockReward:       Coins(config.INITIAL_BLOCK_REWARD),
 			TransactionAdded:         make(chan bool),
+			UserOutputs:              make(map[User][]TransactionIdIndexPair),
 		}
 	}
 	return blockchainInstance
@@ -134,6 +136,10 @@ func (blockchain *blockchain) ProcessBlock(block Block) {
 		for i, output := range txn.Outputs {
 			txidIndexPair.Index = uint32(i)
 			blockchain.UnusedTransactionOutputs[txidIndexPair] = output
+			if blockchain.UserOutputs[output.Recipient] == nil {
+				blockchain.UserOutputs[output.Recipient] = make([]TransactionIdIndexPair, 0)
+			}
+			blockchain.UserOutputs[output.Recipient] = append(blockchain.UserOutputs[output.Recipient], txidIndexPair)
 		}
 	}
 }
