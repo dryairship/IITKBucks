@@ -8,6 +8,8 @@ import (
 
 var PORT string
 
+var BLOCKS_PATH string
+
 var MY_URL string
 var MY_PUBLIC_KEY string
 
@@ -30,6 +32,8 @@ func init() {
 	viper.AutomaticEnv()
 
 	PORT = viper.GetString("port")
+
+	BLOCKS_PATH = viper.GetString("blocksPath")
 
 	MY_URL = viper.GetString("myUrl")
 	MY_PUBLIC_KEY = viper.GetString("myPublicKey")

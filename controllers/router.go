@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
+
+	"github.com/dryairship/IITKBucks/config"
 )
 
 func pingHandler(c *gin.Context) {
@@ -13,7 +15,7 @@ func pingHandler(c *gin.Context) {
 func SetUpRoutes(router *gin.Engine) {
 	router.GET("/ping", pingHandler)
 
-	router.Static("/getBlock", "./blocks")
+	router.Static("/getBlock", config.BLOCKS_PATH)
 	router.POST("/newBlock", newBlockHandler)
 
 	router.GET("/getPeers", getPeersHandler)

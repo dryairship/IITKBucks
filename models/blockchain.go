@@ -36,6 +36,7 @@ func Blockchain() *blockchain {
 }
 
 func (blockchain *blockchain) AppendBlock(block Block) {
+	block.SaveToFile()
 	block.Transactions = nil
 	blockchain.Chain = append(blockchain.Chain, block)
 }

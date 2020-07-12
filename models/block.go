@@ -4,6 +4,10 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
+
+	"github.com/dryairship/IITKBucks/config"
 )
 
 type Block struct {
@@ -51,6 +55,17 @@ func (block Block) ToByteArray() []byte {
 
 func (block Block) GetHash() Hash {
 	return sha256.Sum256(block.CalculateHeader(false))
+}
+
+func (block Block) SaveToFile() {
+	err := ioutil.WriteFile(
+		fmt.Sprintf("%s/%d", config.BLOCKS_PATH, block.Index),
+		block.ToByteArray(),
+		0666,
+	)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func BlockFromByteArray(data []byte) (Block, error) {
