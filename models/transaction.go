@@ -3,6 +3,7 @@ package models
 import (
 	"crypto/sha256"
 	"encoding/binary"
+	"encoding/json"
 )
 
 type Transaction struct {
@@ -122,4 +123,15 @@ func (txnRequestBody *TransactionRequestBody) ToTransaction() (Transaction, erro
 	_ = txn.CalculateHash()
 
 	return txn, nil
+}
+
+func (txnMap TransactionMap) MarshalJSON() ([]byte, error) {
+	if len(txnMap) == 0 {
+		return []byte("[]"), nil
+	}
+	var list TransactionList
+	for _, txn := range txnMap {
+		list = append(list, txn)
+	}
+	return json.Marshal(list)
 }
