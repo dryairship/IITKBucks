@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 
 	"github.com/dryairship/IITKBucks/config"
@@ -28,4 +29,6 @@ func SetUpRoutes(router *gin.Engine) {
 	router.POST("/newTransaction", newTransactionsHandler)
 
 	router.POST("/getUnusedOutputs", getUnusedOutputsHandler)
+
+	router.Use(static.Serve("/", static.LocalFile(config.FRONTEND_PATH, true)))
 }

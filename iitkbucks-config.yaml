@@ -1,6 +1,7 @@
 port: 8000
 
 blocksPath: ./blocks
+frontendPath: ./frontend/build
 
 myUrl: "http://localhost:8000"
 myPublicKeyFile: "./keys/public.pem"

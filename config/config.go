@@ -10,6 +10,7 @@ import (
 var PORT string
 
 var BLOCKS_PATH string
+var FRONTEND_PATH string
 
 var MY_URL string
 var MY_PUBLIC_KEY string
@@ -35,6 +36,7 @@ func init() {
 	PORT = viper.GetString("port")
 
 	BLOCKS_PATH = viper.GetString("blocksPath")
+	FRONTEND_PATH = viper.GetString("frontendPath")
 
 	MY_URL = viper.GetString("myUrl")
 
