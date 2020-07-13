@@ -74,12 +74,18 @@ func mineBlock(block models.Block) {
 	_ = block.CalculateHeader(true)
 	target := models.Blockchain().CurrentTarget
 	log.Println("[INFO] Mining started.")
+	log.Println("Total income =", block.Transactions[0].Outputs[0].Amount)
 	for i := int64(0); ; i++ {
 		block.Nonce = i
 		block.Timestamp = time.Now().UnixNano()
 		if block.GetHash().IsLessThan(target) {
 			log.Printf("[INFO] New block mined! Index: %d, Timestamp: %d, Nonce: %d\n", block.Index, block.Timestamp, block.Nonce)
-			currentMinerChannel <- true
+			select {
+			case currentMinerChannel <- true:
+				log.Println("[INFO] Someone received the new block message though channel")
+			default:
+			}
+			log.Printf("[INFO] Channel closed.")
 			performPostNewBlockSteps(block)
 			return
 		}

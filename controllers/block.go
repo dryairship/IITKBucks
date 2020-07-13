@@ -31,6 +31,7 @@ func newBlockHandler(c *gin.Context) {
 		return
 	}
 
+	log.Println("[INFO] Valid new block received with index", block.Index)
 	performPostNewBlockSteps(block)
 	c.Status(200)
 }
@@ -69,11 +70,13 @@ func propagateBlockToPeers(block models.Block) {
 }
 
 func performPostNewBlockSteps(newBlock models.Block) {
-	models.Blockchain().ProcessBlock(newBlock)
-	models.Blockchain().AppendBlock(newBlock)
+	log.Println("[INFO] Performing post new block steps.")
 
 	close(currentMinerChannel)
 	currentMinerChannel = make(chan bool)
+
+	models.Blockchain().ProcessBlock(newBlock)
+	models.Blockchain().AppendBlock(newBlock)
 
 	go startMining()
 	go propagateBlockToPeers(newBlock)
