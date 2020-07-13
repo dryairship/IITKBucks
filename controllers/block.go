@@ -15,7 +15,7 @@ func newBlockHandler(c *gin.Context) {
 	var body []byte
 	numBytes, err := c.Request.Body.Read(body)
 	if err != nil || numBytes == 0 {
-		_ = c.AbortWithError(400, err)
+		c.AbortWithStatus(400)
 		return
 	}
 
