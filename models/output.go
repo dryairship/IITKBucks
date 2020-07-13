@@ -58,11 +58,11 @@ func OutputFromByteArray(data []byte) (Output, int, error) {
 	amount := binary.BigEndian.Uint64(data[:8])
 	pubKeySize := int(binary.BigEndian.Uint32(data[8:12]))
 
-	if len(data) < pubKeySize+40 {
+	if len(data) < pubKeySize+12 {
 		return Output{}, 0, ERROR_INSUFFICIENT_DATA
 	}
 
-	recipient := User(data[12:pubKeySize])
+	recipient := User(data[12 : 12+pubKeySize])
 
 	return Output{
 		Amount:    amount,

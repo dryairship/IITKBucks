@@ -103,6 +103,7 @@ func TransactionListFromByteArray(data []byte) (TransactionList, error) {
 			return nil, err
 		}
 		list = append(list, txn)
+		currentOffset += txnSize
 	}
 	return list, nil
 }
