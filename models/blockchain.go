@@ -47,10 +47,6 @@ func (blockchain *blockchain) IsTransactionPending(transactionHash Hash) bool {
 }
 
 func (blockchain *blockchain) IsTransactionValid(transaction *Transaction) (bool, Coins) {
-	if !blockchain.IsTransactionPending(transaction.CalculateHash()) {
-		return false, 0
-	}
-
 	outputDataHash := transaction.CalculateOutputDataHash()
 	sumOfInputs := uint64(0)
 
@@ -60,7 +56,7 @@ func (blockchain *blockchain) IsTransactionValid(transaction *Transaction) (bool
 		pair.Index = input.OutputIndex
 
 		output, exists := blockchain.UnusedTransactionOutputs[pair]
-		if !exists || !input.Signature.Unlock(&output, &outputDataHash) {
+		if !exists || !input.Signature.Unlock(&output, &pair, &outputDataHash) {
 			return false, 0
 		}
 

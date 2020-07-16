@@ -3,6 +3,7 @@ package models
 import (
 	"crypto"
 	"crypto/rsa"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -39,16 +40,19 @@ func SignatureFromHexString(str string) (Signature, error) {
 	return Signature(signature), nil
 }
 
-func (sig Signature) Unlock(output *Output, message *Hash) bool {
+func (sig Signature) Unlock(output *Output, txidIndexPair *TransactionIdIndexPair, message *Hash) bool {
 	pubkey, err := output.Recipient.GetPublicKey()
 	if err != nil {
 		return false
 	}
 
+	totalData := append(txidIndexPair.ToByteArray(), message[:]...)
+	hash := sha256.Sum256(totalData)
+
 	if err := rsa.VerifyPSS(
 		pubkey,
 		crypto.SHA256,
-		message.ToByteArray(),
+		hash[:],
 		sig,
 		&unlockOptions,
 	); err != nil {

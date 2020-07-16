@@ -28,6 +28,12 @@ func newTransactionsHandler(c *gin.Context) {
 		return
 	}
 
+	valid, _ := models.Blockchain().IsTransactionValid(&txn)
+	if !valid {
+		c.String(400, "Invalid transaction.")
+		return
+	}
+
 	models.Blockchain().AddTransaction(txn)
 	c.Status(200)
 }
