@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 
 	"github.com/dryairship/IITKBucks/config"
+	"github.com/dryairship/IITKBucks/logger"
 )
 
 type Block struct {
@@ -70,6 +71,7 @@ func (block Block) SaveToFile() {
 
 func BlockFromByteArray(data []byte) (Block, error) {
 	if len(data) < 116 {
+		logger.Println(logger.RareError, "[Models/Block] [ERROR] Block has insufficient data")
 		return Block{}, ERROR_INSUFFICIENT_DATA
 	}
 
@@ -85,6 +87,7 @@ func BlockFromByteArray(data []byte) (Block, error) {
 
 	transactions, err := TransactionListFromByteArray(data[116:])
 	if err != nil {
+		logger.Println(logger.RareError, "[Models/Block] [ERROR] Error while building transaction list from bytes. Err:", err)
 		return Block{}, err
 	}
 

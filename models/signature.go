@@ -7,6 +7,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+
+	"github.com/dryairship/IITKBucks/logger"
 )
 
 type Signature []byte
@@ -30,11 +32,13 @@ func (sig Signature) ToByteArray() []byte {
 
 func SignatureFromHexString(str string) (Signature, error) {
 	if str == "" {
+		logger.Println(logger.RareError, "[Models/Signature] [ERROR] Signature is empty")
 		return nil, ERROR_EMPTY_SIGNATURE_STRING
 	}
 
 	signature, err := hex.DecodeString(str)
 	if err != nil {
+		logger.Println(logger.RareError, "[Models/Signature] [ERROR] Could not decode signature from hex. Signature:", str)
 		return nil, err
 	}
 	return Signature(signature), nil
@@ -56,6 +60,8 @@ func (sig Signature) Unlock(output *Output, txidIndexPair *TransactionIdIndexPai
 		sig,
 		&unlockOptions,
 	); err != nil {
+		logger.Println(logger.RareError, "[Models/Signature] [ERROR] Transaction Verification Failed. TotalData:",
+			hex.EncodeToString(totalData), ", Signature:", sig)
 		return false
 	}
 

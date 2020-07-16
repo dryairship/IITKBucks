@@ -4,6 +4,8 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/json"
+
+	"github.com/dryairship/IITKBucks/logger"
 )
 
 type Transaction struct {
@@ -62,11 +64,13 @@ func (txn Transaction) CalculateOutputDataHash() Hash {
 func TransactionFromByteArray(data []byte) (Transaction, error) {
 	inputList, bytesRead, err := InputListFromByteArray(data)
 	if err != nil {
+		logger.Println(logger.RareError, "[Models/Transaction] [ERROR] Error while reading input list from byte array")
 		return Transaction{}, err
 	}
 
 	outputList, _, err := OutputListFromByteArray(data[bytesRead:])
 	if err != nil {
+		logger.Println(logger.RareError, "[Models/Transaction] [ERROR] Error while reading output list from byte array")
 		return Transaction{}, err
 	}
 
@@ -81,6 +85,7 @@ func TransactionFromByteArray(data []byte) (Transaction, error) {
 
 func TransactionListFromByteArray(data []byte) (TransactionList, error) {
 	if len(data) < 4 {
+		logger.Println(logger.RareError, "[Models/Transaction] [ERROR] TransactionList has less than 4 bytes")
 		return nil, ERROR_INSUFFICIENT_DATA
 	}
 
@@ -90,17 +95,20 @@ func TransactionListFromByteArray(data []byte) (TransactionList, error) {
 	var list TransactionList
 	for i := uint32(0); i < numTransactions; i++ {
 		if len(data) < currentOffset+4 {
+			logger.Printf(logger.RareError, "[Models/Transaction] [ERROR] TransactionList does not have enough data for %d transactions\n", numTransactions)
 			return nil, ERROR_INSUFFICIENT_DATA
 		}
 
 		txnSize := int(binary.BigEndian.Uint32(data[currentOffset : currentOffset+4]))
 		currentOffset += 4
 		if len(data) < currentOffset+txnSize {
+			logger.Printf(logger.RareError, "[Models/Transaction] [ERROR] TransactionList does not have enough data for %d transactions\n", numTransactions)
 			return nil, ERROR_INSUFFICIENT_DATA
 		}
 
 		txn, err := TransactionFromByteArray(data[currentOffset : currentOffset+txnSize])
 		if err != nil {
+			logger.Printf(logger.RareError, "[Models/Transaction] [ERROR] Transaction %d has error. Err: %v\n", i, err)
 			return nil, err
 		}
 		list = append(list, txn)
@@ -112,11 +120,13 @@ func TransactionListFromByteArray(data []byte) (TransactionList, error) {
 func (txnRequestBody *TransactionRequestBody) ToTransaction() (Transaction, error) {
 	inputs, err := txnRequestBody.Inputs.ToInputList()
 	if err != nil {
+		logger.Println(logger.RareError, "[Models/Transaction] [ERROR] Could not convert JSON inputs to inputlist")
 		return Transaction{}, err
 	}
 
 	outputs, err := txnRequestBody.Outputs.ToOutputList()
 	if err != nil {
+		logger.Println(logger.RareError, "[Models/Transaction] [ERROR] Could not convert JSON outputs to outputlist")
 		return Transaction{}, err
 	}
 

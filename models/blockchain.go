@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/dryairship/IITKBucks/config"
+	"github.com/dryairship/IITKBucks/logger"
 )
 
 type blockchain struct {
@@ -20,7 +21,7 @@ func Blockchain() *blockchain {
 	if blockchainInstance == nil {
 		target, err := HashFromHexString(config.INITIAL_TARGET)
 		if err != nil {
-			panic(err)
+			logger.Fatal("[Models/Blockchain] [FATAL] Could not read initial target. Err:", err)
 		}
 		blockchainInstance = &blockchain{
 			Chain:                    make([]Block, 0),
@@ -56,7 +57,12 @@ func (blockchain *blockchain) IsTransactionValid(transaction *Transaction) (bool
 		pair.Index = input.OutputIndex
 
 		output, exists := blockchain.UnusedTransactionOutputs[pair]
-		if !exists || !input.Signature.Unlock(&output, &pair, &outputDataHash) {
+		if !exists {
+			logger.Println(logger.RareError, "[Models/Blockchain] [ERROR] TXIDInputPair does not exist in unused outputs. Pair: ", pair)
+			return false, 0
+		}
+		if !input.Signature.Unlock(&output, &pair, &outputDataHash) {
+			logger.Println(logger.RareError, "[Models/Blockchain] [ERROR] Signature verification failed. Input:", input, ", Output:", output)
 			return false, 0
 		}
 
@@ -67,31 +73,37 @@ func (blockchain *blockchain) IsTransactionValid(transaction *Transaction) (bool
 	return sumOfOutputs <= sumOfInputs, sumOfInputs - sumOfOutputs
 }
 
-func (blockchain *blockchain) IsBlockValid(block *Block) bool {
+func (blockchain *blockchain) IsBlockValid(block *Block) (bool, error) {
 	if block.Index != uint32(len(blockchain.Chain)+1) {
-		return false
+		logger.Println(logger.RareError, "[Models/Blockchain] [ERROR] Block has incorrect index. Expected:", len(blockchain.Chain)+1, ", Found:", block.Index)
+		return false, ERROR_INCORRECT_INDEX
 	}
 
 	parentIndex := block.Index - 1
 
 	if blockchain.Chain[parentIndex].Timestamp > block.Timestamp {
-		return false
+		logger.Println(logger.RareError, "[Models/Blockchain] [ERROR] Block's timestamp is less than parent's timestamp. Parent:", blockchain.Chain[parentIndex].Timestamp, ", Block:", block.Timestamp)
+		return false, ERROR_LESS_TIMESTAMP
 	}
 
 	if blockchain.Chain[parentIndex].GetHash() != block.ParentHash {
-		return false
+		logger.Println(logger.RareError, "[Models/Blockchain] [ERROR] Parent hash mismatch. Expected:", blockchain.Chain[parentIndex].GetHash(), ", Found:", block.ParentHash)
+		return false, ERROR_PARENT_HASH_MISMATCH
 	}
 
 	if block.Target != blockchain.CurrentTarget {
-		return false
+		logger.Println(logger.RareError, "[Models/Blockchain] [ERROR] Target mismatch. Expected:", blockchain.CurrentTarget, ", Found:", block.Target)
+		return false, ERROR_TARGET_MISMATCH
 	}
 
 	if block.BodyHash != block.GetBodyHash() {
-		return false
+		logger.Println(logger.RareError, "[Models/Blockchain] [ERROR] Body Hash mismatch. Calculated hash:", block.GetBodyHash(), ", Stored hash:", block.BodyHash)
+		return false, ERROR_INCORRECT_BODY_HASH
 	}
 
 	if !block.GetHash().IsLessThan(blockchain.CurrentTarget) {
-		return false
+		logger.Println(logger.RareError, "[Models/Blockchain] [ERROR] Block hash is not less than target. Block hash:", block.GetHash(), ", Target:", blockchain.CurrentTarget)
+		return false, ERROR_ABOVE_TARGET
 	}
 
 	var totalFee Coins
@@ -101,12 +113,20 @@ func (blockchain *blockchain) IsBlockValid(block *Block) bool {
 		}
 		valid, txnFee := blockchain.IsTransactionValid(&block.Transactions[i])
 		if !valid {
-			return false
+			logger.Printf(logger.RareError, "[Models/Blockchain] [ERROR] Transaction %d in the block is invalid", i)
+			return false, ERROR_CONTAINS_INVALID_TRANSACTION
 		}
 		totalFee += txnFee
 	}
 
-	return totalFee >= block.Transactions[0].Outputs.GetSumOfAmounts()
+	totalFee += blockchain.CurrentBlockReward
+
+	if totalFee < block.Transactions[0].Outputs.GetSumOfAmounts() {
+		logger.Println(logger.RareError, "[Models/Blockchain] [ERROR] Coinbase transaction has more coins than expected. Expected:", totalFee, ", Found:", block.Transactions[0].Outputs.GetSumOfAmounts())
+		return false, ERROR_INVALID_COINBASE_TRANSCTION
+	}
+
+	return true, nil
 }
 
 func (blockchain *blockchain) AddTransaction(transaction Transaction) {

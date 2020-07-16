@@ -3,6 +3,8 @@ package models
 import (
 	"encoding/binary"
 	"encoding/json"
+
+	"github.com/dryairship/IITKBucks/logger"
 )
 
 type Output struct {
@@ -53,6 +55,7 @@ func (outputList OutputList) ToByteArray() []byte {
 
 func OutputFromByteArray(data []byte) (Output, int, error) {
 	if len(data) < 12 {
+		logger.Println(logger.RareError, "[Models/Output] [ERROR] Output has less than 12 bytes")
 		return Output{}, 0, ERROR_INSUFFICIENT_DATA
 	}
 
@@ -60,6 +63,7 @@ func OutputFromByteArray(data []byte) (Output, int, error) {
 	pubKeySize := int(binary.BigEndian.Uint32(data[8:12]))
 
 	if len(data) < pubKeySize+12 {
+		logger.Println(logger.RareError, "[Models/Input] [ERROR] Output has insufficient data")
 		return Output{}, 0, ERROR_INSUFFICIENT_DATA
 	}
 
@@ -73,6 +77,7 @@ func OutputFromByteArray(data []byte) (Output, int, error) {
 
 func OutputListFromByteArray(data []byte) (OutputList, int, error) {
 	if len(data) < 4 {
+		logger.Println(logger.RareError, "[Models/Output] [ERROR] OutputList has less than 4 bytes")
 		return nil, 0, ERROR_INSUFFICIENT_DATA
 	}
 
@@ -83,6 +88,7 @@ func OutputListFromByteArray(data []byte) (OutputList, int, error) {
 	for i := uint32(0); i < numOutputs; i++ {
 		output, bytesRead, err := OutputFromByteArray(data[currentOffset:])
 		if err != nil {
+			logger.Printf(logger.RareError, "[Models/Output] [ERROR] Output %d has error: %v\n", i, err)
 			return list, 0, err
 		}
 		list = append(list, output)
@@ -103,6 +109,7 @@ func (outputList OutputList) GetSumOfAmounts() Coins {
 func (outputRequestBody OutputRequestBody) ToOutput() (Output, error) {
 	amt, err := outputRequestBody.Amount.Int64()
 	if err != nil {
+		logger.Println(logger.RareError, "[Models/Output] [ERROR] Could not parse amounts from string to Coins. Err:", err)
 		return Output{}, err
 	}
 
@@ -114,9 +121,10 @@ func (outputRequestBody OutputRequestBody) ToOutput() (Output, error) {
 
 func (outputListRequestBody OutputListRequestBody) ToOutputList() (OutputList, error) {
 	var outputList OutputList
-	for _, outputRequestBody := range outputListRequestBody {
+	for i, outputRequestBody := range outputListRequestBody {
 		thisOutput, err := outputRequestBody.ToOutput()
 		if err != nil {
+			logger.Printf(logger.RareError, "[Models/Output] [ERROR] Output %d has error. Err: %v\n", i, err)
 			return outputList, err
 		}
 		outputList = append(outputList, thisOutput)

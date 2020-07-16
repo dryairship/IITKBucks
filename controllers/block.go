@@ -25,9 +25,9 @@ func newBlockHandler(c *gin.Context) {
 		return
 	}
 
-	isValid := models.Blockchain().IsBlockValid(&block)
+	isValid, err := models.Blockchain().IsBlockValid(&block)
 	if !isValid {
-		c.String(400, "Block is not valid")
+		c.String(400, err.Error())
 		return
 	}
 
