@@ -24,7 +24,7 @@ func (output Output) ToByteArray() []byte {
 	var result []byte
 
 	amtBytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(amtBytes, output.Amount)
+	binary.BigEndian.PutUint64(amtBytes, uint64(output.Amount))
 	result = append(result, amtBytes...)
 
 	rcptByteArray := output.Recipient.ToByteArray()
@@ -66,7 +66,7 @@ func OutputFromByteArray(data []byte) (Output, int, error) {
 	recipient := User(data[12 : 12+pubKeySize])
 
 	return Output{
-		Amount:    amount,
+		Amount:    Coins(amount),
 		Recipient: recipient,
 	}, pubKeySize + 12, nil
 }

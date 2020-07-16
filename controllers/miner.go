@@ -33,7 +33,7 @@ func createCandidateBlock() models.Block {
 
 	var pair models.TransactionIdIndexPair
 	for _, txn := range pendingTxns {
-		inputSum := uint64(0)
+		inputSum := models.Coins(0)
 		isTxnValid := true
 		for _, input := range txn.Inputs {
 			pair.TransactionId = input.TransactionId

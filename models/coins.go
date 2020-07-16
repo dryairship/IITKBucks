@@ -1,5 +1,11 @@
 package models
 
-type Coins = uint64
+import (
+	"fmt"
+)
 
-const BLOCK_REWARD Coins = 1000
+type Coins uint64
+
+func (coins Coins) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf("\"%d\"", uint64(coins))), nil
+}

@@ -48,7 +48,7 @@ func (blockchain *blockchain) IsTransactionPending(transactionHash Hash) bool {
 
 func (blockchain *blockchain) IsTransactionValid(transaction *Transaction) (bool, Coins) {
 	outputDataHash := transaction.CalculateOutputDataHash()
-	sumOfInputs := uint64(0)
+	sumOfInputs := Coins(0)
 
 	var pair TransactionIdIndexPair
 	for _, input := range transaction.Inputs {
