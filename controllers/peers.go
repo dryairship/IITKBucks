@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/dryairship/IITKBucks/logger"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/dryairship/IITKBucks/config"
+	"github.com/dryairship/IITKBucks/logger"
 )
 
 type newPeerRequestBody struct {
@@ -21,6 +22,7 @@ type getPeersResponseBody struct {
 }
 
 var peers []string
+var peerIPs = make(map[string]string)
 var potentialPeers []string = config.POTENTIAL_PEERS
 
 func getPeersHandler(c *gin.Context) {
@@ -29,6 +31,10 @@ func getPeersHandler(c *gin.Context) {
 	} else {
 		c.JSON(200, gin.H{"peers": make([]int, 0)})
 	}
+}
+
+func getPeerIPsHandler(c *gin.Context) {
+	c.JSON(200, peerIPs)
 }
 
 func newPeerHandler(c *gin.Context) {
@@ -44,8 +50,16 @@ func newPeerHandler(c *gin.Context) {
 		return
 	}
 
+	peerIPs[c.ClientIP()] = body.Url
+	logger.Println(logger.MinorEvent, "[Controllers/Peers] [INFO] Received peer add request. URL:", body.Url, ", IP:", c.ClientIP())
+
 	if isAlreadyAPeer(body.Url) {
 		c.String(200, "Peer has already been added")
+		return
+	}
+
+	if strings.Contains(body.Url, "127.0.0.1") || strings.Contains(body.Url, "localhost") || strings.Contains(config.MY_URL, body.Url) {
+		c.String(400, "Invalid Peer URL")
 		return
 	}
 
@@ -56,7 +70,7 @@ func newPeerHandler(c *gin.Context) {
 func makeGetPeersRequest(peer string) {
 	response, err := http.Get(fmt.Sprintf("%s/getPeers", peer))
 	if err != nil {
-		logger.Println(logger.RareError, "[Controllers/Peers] [WARN] go HTTP error while asking for peers. Peer: ", peer, ", Error: ", err)
+		logger.Println(logger.RareError, "[Controllers/Peers] [WARN] go HTTP error while asking for peers. Peer:", peer, ", Error:", err)
 		return
 	}
 
@@ -64,14 +78,14 @@ func makeGetPeersRequest(peer string) {
 	var bodyBytes []byte
 	_, err = response.Body.Read(bodyBytes)
 	if err != nil {
-		logger.Println(logger.RareError, "[Controllers/Peers] [WARN] Cannot read getPeers response body. Peer:  ", peer, "Error: ", err)
+		logger.Println(logger.RareError, "[Controllers/Peers] [WARN] Cannot read getPeers response body. Peer:", peer, ". Error:", err)
 		return
 	}
 
 	var body getPeersResponseBody
 	err = json.Unmarshal(bodyBytes, &body)
 	if err != nil {
-		logger.Println(logger.RareError, "[Controllers/Peers] [WARN] Cannot unmarshal getPeers response body. Peer:  ", peer, "Error: ", err)
+		logger.Println(logger.RareError, "[Controllers/Peers] [WARN] Cannot unmarshal getPeers response body. Peer:", peer, ", Error:", err)
 		return
 	}
 
@@ -82,7 +96,7 @@ func makeNewPeerRequest(peer string) {
 	var jsonStr = []byte(fmt.Sprintf(`"url":"%s"}`, config.MY_URL))
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/newPeer", peer), bytes.NewBuffer(jsonStr))
 	if err != nil {
-		logger.Println(logger.RareError, "[Controllers/Peers] [WARN] go HTTP error while builing newPeer request. Peer: ", peer, ", Error: ", err)
+		logger.Println(logger.RareError, "[Controllers/Peers] [WARN] go HTTP error while builing newPeer request. Peer:", peer, ", Error:", err)
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
@@ -90,7 +104,7 @@ func makeNewPeerRequest(peer string) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		logger.Println(logger.CommonError, "[Controllers/Peers] [WARN] go HTTP error while making newPeer request. Peer: ", peer, ", Error: ", err)
+		logger.Println(logger.CommonError, "[Controllers/Peers] [WARN] go HTTP error while making newPeer request. Peer:", peer, ", Error:", err)
 		return
 	}
 	defer resp.Body.Close()
