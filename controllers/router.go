@@ -30,5 +30,7 @@ func SetUpRoutes(router *gin.Engine) {
 
 	router.POST("/getUnusedOutputs", getUnusedOutputsHandler)
 
+	router.POST("/sign", handleSign)
+
 	router.Use(static.Serve("/", static.LocalFile(config.FRONTEND_PATH, true)))
 }
