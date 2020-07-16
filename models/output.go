@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/binary"
+	"encoding/json"
 )
 
 type Output struct {
@@ -10,8 +11,8 @@ type Output struct {
 }
 
 type OutputRequestBody struct {
-	Recipient string `json:"recipient" binding:"required"`
-	Amount    uint64 `json:"amount" binding:"required"`
+	Recipient string      `json:"recipient" binding:"required"`
+	Amount    json.Number `json:"amount" binding:"required"`
 }
 
 type OutputList []Output
@@ -99,17 +100,26 @@ func (outputList OutputList) GetSumOfAmounts() Coins {
 	return totalCoins
 }
 
-func (outputRequestBody OutputRequestBody) ToOutput() Output {
+func (outputRequestBody OutputRequestBody) ToOutput() (Output, error) {
+	amt, err := outputRequestBody.Amount.Int64()
+	if err != nil {
+		return Output{}, err
+	}
+
 	return Output{
 		Recipient: User(outputRequestBody.Recipient),
-		Amount:    Coins(outputRequestBody.Amount),
-	}
+		Amount:    Coins(amt),
+	}, nil
 }
 
-func (outputListRequestBody OutputListRequestBody) ToOutputList() OutputList {
+func (outputListRequestBody OutputListRequestBody) ToOutputList() (OutputList, error) {
 	var outputList OutputList
 	for _, outputRequestBody := range outputListRequestBody {
-		outputList = append(outputList, outputRequestBody.ToOutput())
+		thisOutput, err := outputRequestBody.ToOutput()
+		if err != nil {
+			return outputList, err
+		}
+		outputList = append(outputList, thisOutput)
 	}
-	return outputList
+	return outputList, nil
 }

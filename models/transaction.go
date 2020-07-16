@@ -115,9 +115,14 @@ func (txnRequestBody *TransactionRequestBody) ToTransaction() (Transaction, erro
 		return Transaction{}, err
 	}
 
+	outputs, err := txnRequestBody.Outputs.ToOutputList()
+	if err != nil {
+		return Transaction{}, err
+	}
+
 	txn := Transaction{
 		Inputs:  inputs,
-		Outputs: txnRequestBody.Outputs.ToOutputList(),
+		Outputs: outputs,
 	}
 
 	_ = txn.CalculateHash()
