@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"log"
 	"time"
 
+	"github.com/dryairship/IITKBucks/logger"
 	"github.com/dryairship/IITKBucks/models"
 )
 
@@ -20,7 +20,7 @@ func createCoinbaseTransaction() models.Transaction {
 
 func createCandidateBlock() models.Block {
 	if len(models.Blockchain().PendingTransactions) == 0 {
-		log.Println("[INFO] Waiting for a transaction to appear.")
+		logger.Println(logger.MajorEvent, "[Controllers/Miner] [TRACE] Waiting for a transaction to appear.")
 		<-models.Blockchain().TransactionAdded
 	}
 
@@ -60,7 +60,7 @@ func createCandidateBlock() models.Block {
 	parentHash := models.Blockchain().Chain[index-1].GetHash()
 	target := models.Blockchain().CurrentTarget
 
-	log.Println("[INFO] Candidate block created with index", index)
+	logger.Println(logger.MajorEvent, "[Controllers/Miner] [TRACE] Candidate block created with index", index)
 
 	return models.Block{
 		Index:        uint32(index),
@@ -73,26 +73,25 @@ func createCandidateBlock() models.Block {
 func mineBlock(block models.Block) {
 	_ = block.CalculateHeader(true)
 	target := models.Blockchain().CurrentTarget
-	log.Println("[INFO] Mining started.")
-	log.Println("Total income =", block.Transactions[0].Outputs[0].Amount)
+	logger.Println(logger.MajorEvent, "[Controllers/Miner] [TRACE] Mining started. Estimated income =", block.Transactions[0].Outputs[0].Amount)
 	for i := int64(0); ; i++ {
 		block.Nonce = i
 		block.Timestamp = time.Now().UnixNano()
 		if block.GetHash().IsLessThan(target) {
-			log.Printf("[INFO] New block mined! Index: %d, Timestamp: %d, Nonce: %d\n", block.Index, block.Timestamp, block.Nonce)
+			logger.Printf(logger.MajorEvent, "[Controllers/Miner] [INFO] New block mined! Index: %d, Timestamp: %d, Nonce: %d\n", block.Index, block.Timestamp, block.Nonce)
 			select {
 			case currentMinerChannel <- true:
-				log.Println("[INFO] Someone received the new block message though channel")
+				logger.Println(logger.MinorEvent, "[Controllers/Miner] [DEBUG] Someone received the new block message though channel")
 			default:
 			}
-			log.Printf("[INFO] Channel closed.")
+			logger.Printf(logger.MinorEvent, "[Controllers/Miner] [DEBUG] Channel closed.")
 			performPostNewBlockSteps(block)
 			return
 		}
 
 		select {
 		case <-currentMinerChannel:
-			log.Println("[INFO] Mining Interrupted.")
+			logger.Println(logger.MajorEvent, "[Controllers/Miner] [WARN] Mining Interrupted.")
 			return
 		default:
 			continue

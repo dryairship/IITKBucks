@@ -22,13 +22,15 @@ var INITIAL_BLOCK_REWARD int64
 var MAX_PEERS int
 var POTENTIAL_PEERS []string
 
+var LOG_LEVEL int
+
 func init() {
 	viper.SetConfigName("iitkbucks-config")
 	viper.AddConfigPath(".")
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		log.Println("[WARNING] Unable to locate configuration file")
+		log.Println("[WARN] Unable to locate configuration file")
 	}
 
 	viper.AutomaticEnv()
@@ -53,4 +55,6 @@ func init() {
 
 	MAX_PEERS = viper.GetInt("maxPeers")
 	POTENTIAL_PEERS = viper.GetStringSlice("potentialPeers")
+
+	LOG_LEVEL = viper.GetInt("logLevel")
 }

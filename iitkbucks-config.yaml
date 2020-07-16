@@ -10,6 +10,8 @@ isPro: true
 initialTarget: "00000f0000000000000000000000000000000000000000000000000000000000"
 initialBlockReward: 10000
 
+logLevel: 4
+
 maxPeers: 5
 potentialPeers:
   - "http://localhost:8001"

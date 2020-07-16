@@ -1,9 +1,8 @@
 package controllers
 
 import (
-	"log"
-
 	"github.com/dryairship/IITKBucks/config"
+	"github.com/dryairship/IITKBucks/logger"
 	"github.com/dryairship/IITKBucks/models"
 )
 
@@ -14,7 +13,7 @@ func performNoobInitialization() {
 	go tryToAddPeers(c)
 	addedAPeer := <-c
 	if !addedAPeer {
-		log.Fatal("[ERROR] No peers added.")
+		logger.Fatal("[Controllers/Init] [FATAL] No peers added.")
 	}
 }
 
@@ -24,9 +23,9 @@ func performProInitialization() {
 	go mineBlock(genesisBlock)
 	signal := <-currentMinerChannel
 	if signal {
-		log.Println("[INFO] Genesis block mined successfully.")
+		logger.Println(logger.MajorEvent, "[Controllers/Init] [INFO] Genesis block mined successfully.")
 	} else {
-		log.Fatal("[ERROR] Could not mine genesis block.")
+		logger.Fatal("[Controllers/Init] [FATAL] Could not mine genesis block.")
 	}
 }
 

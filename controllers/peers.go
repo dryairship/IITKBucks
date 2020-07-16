@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
+	"github.com/dryairship/IITKBucks/logger"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -56,7 +56,7 @@ func newPeerHandler(c *gin.Context) {
 func makeGetPeersRequest(peer string) {
 	response, err := http.Get(fmt.Sprintf("%s/getPeers", peer))
 	if err != nil {
-		log.Println("[ERROR] go HTTP error while asking for peers. Peer: ", peer, ", Error: ", err)
+		logger.Println(logger.RareError, "[Controllers/Peers] [WARN] go HTTP error while asking for peers. Peer: ", peer, ", Error: ", err)
 		return
 	}
 
@@ -64,14 +64,14 @@ func makeGetPeersRequest(peer string) {
 	var bodyBytes []byte
 	_, err = response.Body.Read(bodyBytes)
 	if err != nil {
-		log.Println("[ERROR] Cannot read getPeers response body. Peer:  ", peer, "Error: ", err)
+		logger.Println(logger.RareError, "[Controllers/Peers] [WARN] Cannot read getPeers response body. Peer:  ", peer, "Error: ", err)
 		return
 	}
 
 	var body getPeersResponseBody
 	err = json.Unmarshal(bodyBytes, &body)
 	if err != nil {
-		log.Println("[ERROR] Cannot unmarshal getPeers response body. Peer:  ", peer, "Error: ", err)
+		logger.Println(logger.RareError, "[Controllers/Peers] [WARN] Cannot unmarshal getPeers response body. Peer:  ", peer, "Error: ", err)
 		return
 	}
 
@@ -82,7 +82,7 @@ func makeNewPeerRequest(peer string) {
 	var jsonStr = []byte(fmt.Sprintf(`"url":"%s"}`, config.MY_URL))
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/newPeer", peer), bytes.NewBuffer(jsonStr))
 	if err != nil {
-		log.Println("[ERROR] go HTTP error while builing newPeer request. Peer: ", peer, ", Error: ", err)
+		logger.Println(logger.RareError, "[Controllers/Peers] [WARN] go HTTP error while builing newPeer request. Peer: ", peer, ", Error: ", err)
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
@@ -90,7 +90,7 @@ func makeNewPeerRequest(peer string) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Println("[ERROR] go HTTP error while making newPeer request. Peer: ", peer, ", Error: ", err)
+		logger.Println(logger.CommonError, "[Controllers/Peers] [WARN] go HTTP error while making newPeer request. Peer: ", peer, ", Error: ", err)
 		return
 	}
 	defer resp.Body.Close()

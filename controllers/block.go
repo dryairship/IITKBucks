@@ -3,11 +3,11 @@ package controllers
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/dryairship/IITKBucks/logger"
 	"github.com/dryairship/IITKBucks/models"
 )
 
@@ -31,7 +31,7 @@ func newBlockHandler(c *gin.Context) {
 		return
 	}
 
-	log.Println("[INFO] Valid new block received with index", block.Index)
+	logger.Println(logger.MajorEvent, "[Controllers/Block] [INFO] Valid new block received with index", block.Index)
 	performPostNewBlockSteps(block)
 	c.String(200, "Block added to the blockchain")
 }
@@ -46,14 +46,14 @@ func propagateBlockToPeers(block models.Block) {
 	for _, peer := range peers {
 		req, err := http.NewRequest("POST", fmt.Sprintf("%s/newBlock", peer), buffer)
 		if err != nil {
-			log.Println("[ERROR] go HTTP error while builing newBlock request. Peer: ", peer, ", Error: ", err)
+			logger.Println(logger.RareError, "[Controllers/Block] [WARN] go HTTP error while builing newBlock request. Peer: ", peer, ", Error: ", err)
 			continue
 		}
 		req.Header.Set("Content-Type", "application/octet-stream")
 
 		resp, err := client.Do(req)
 		if err != nil {
-			log.Println("[ERROR] go HTTP error while making newBlock request. Peer: ", peer, ", Error: ", err)
+			logger.Println(logger.CommonError, "[Controllers/Block] [WARN] go HTTP error while making newBlock request. Peer: ", peer, ", Error: ", err)
 			continue
 		}
 		defer resp.Body.Close()
@@ -61,16 +61,16 @@ func propagateBlockToPeers(block models.Block) {
 		if resp.StatusCode != http.StatusOK {
 			var reply []byte
 			_, _ = resp.Body.Read(reply)
-			log.Printf("[WARNING] Peer %s gave %d response on newBlock request. %s\n", peer, resp.StatusCode, reply)
+			logger.Printf(logger.RareError, "[Controllers/Block] [WARN] Peer %s gave %d response on newBlock request. %s\n", peer, resp.StatusCode, reply)
 		} else {
 			count++
 		}
 	}
-	log.Printf("[INFO] Successfully sent newBlock requests to %d peers.\n", count)
+	logger.Printf(logger.MajorEvent, "[Controllers/Block] [DEBUG] Successfully sent newBlock requests to %d out of %d peers.\n", count, len(peers))
 }
 
 func performPostNewBlockSteps(newBlock models.Block) {
-	log.Println("[INFO] Performing post new block steps.")
+	logger.Println(logger.MinorEvent, "[Controllers/Block] [TRACE] Performing post new block steps.")
 
 	close(currentMinerChannel)
 	currentMinerChannel = make(chan bool)
