@@ -27,24 +27,30 @@ func getPeersHandler(c *gin.Context) {
 	if peers != nil {
 		c.JSON(200, gin.H{"peers": peers})
 	} else {
-		c.JSON(200, gin.H{})
+		c.JSON(200, gin.H{"peers": make([]int, 0)})
 	}
 }
 
 func newPeerHandler(c *gin.Context) {
 	if len(peers) == config.MAX_PEERS {
-		c.AbortWithStatus(500)
+		c.String(500, "Max peer limit reached")
 		return
 	}
 
 	var body newPeerRequestBody
 	err := c.BindJSON(&body)
 	if err != nil {
-		_ = c.AbortWithError(400, err)
+		c.String(400, "Invalid JSON request body")
+		return
+	}
+
+	if isAlreadyAPeer(body.Url) {
+		c.String(200, "Peer has already been added")
+		return
 	}
 
 	peers = append(peers, body.Url)
-	c.Status(200)
+	c.String(200, "Successfully added peer")
 }
 
 func makeGetPeersRequest(peer string) {

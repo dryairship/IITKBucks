@@ -43,7 +43,7 @@ func handleSign(c *gin.Context) {
 
 	data, err := hex.DecodeString(body.Data)
 	if err != nil {
-		c.String(400, "Invalid data")
+		c.String(400, "Invalid signing data")
 		return
 	}
 

@@ -15,28 +15,28 @@ func addAliasHandler(c *gin.Context) {
 	var body aliasRequestBody
 	err := c.BindJSON(&body)
 	if err != nil {
-		c.AbortWithStatus(400)
+		c.String(400, "Invalid JSON request body")
 		return
 	}
 	_, exists := aliasMap[body.Alias]
 	if exists {
-		c.AbortWithStatus(400)
+		c.String(400, "Alias already exists")
 		return
 	}
 	aliasMap[body.Alias] = body.PublicKey
-	c.Status(200)
+	c.String(200, "Successfully added alias")
 }
 
 func getPublicKeyHandler(c *gin.Context) {
 	var body aliasRequestBody
 	err := c.BindJSON(&body)
 	if err != nil {
-		c.AbortWithStatus(400)
+		c.String(400, "Invalid JSON request body")
 		return
 	}
 	_, exists := aliasMap[body.Alias]
 	if !exists {
-		c.AbortWithStatus(404)
+		c.String(404, "Alias not related to any public key")
 		return
 	}
 	c.JSON(200, gin.H{

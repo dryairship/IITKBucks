@@ -15,7 +15,7 @@ func getUnusedOutputsHandler(c *gin.Context) {
 	var body aliasRequestBody
 	err := c.BindJSON(&body)
 	if err != nil {
-		c.AbortWithStatus(400)
+		c.String(400, "Invalid JSON request body")
 		return
 	}
 
@@ -23,7 +23,7 @@ func getUnusedOutputsHandler(c *gin.Context) {
 	if body.Alias != "" {
 		key, exists := aliasMap[body.Alias]
 		if !exists {
-			c.AbortWithStatus(404)
+			c.String(400, "Alias not asscociated with any public key")
 			return
 		}
 		publicKey = key
@@ -31,7 +31,9 @@ func getUnusedOutputsHandler(c *gin.Context) {
 
 	txidIndexPairs, exists := models.Blockchain().UserOutputs[models.User(publicKey)]
 	if !exists {
-		c.AbortWithStatus(404)
+		c.JSON(200, gin.H{
+			"unusedOutputs": make([]int, 0),
+		})
 		return
 	}
 

@@ -15,25 +15,25 @@ func newBlockHandler(c *gin.Context) {
 	var body []byte
 	numBytes, err := c.Request.Body.Read(body)
 	if err != nil || numBytes == 0 {
-		c.AbortWithStatus(400)
+		c.String(400, "Error while reading request body")
 		return
 	}
 
 	block, err := models.BlockFromByteArray(body)
 	if err != nil {
-		_ = c.AbortWithError(400, err)
+		c.String(400, "Given bytes could not be converted to a block")
 		return
 	}
 
 	isValid := models.Blockchain().IsBlockValid(&block)
 	if !isValid {
-		_ = c.AbortWithError(400, models.ERROR_INVALID_BLOCK)
+		c.String(400, "Block is not valid")
 		return
 	}
 
 	log.Println("[INFO] Valid new block received with index", block.Index)
 	performPostNewBlockSteps(block)
-	c.Status(200)
+	c.String(200, "Block added to the blockchain")
 }
 
 func propagateBlockToPeers(block models.Block) {
