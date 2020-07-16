@@ -24,6 +24,11 @@ func createCandidateBlock() models.Block {
 		<-models.Blockchain().TransactionAdded
 	}
 
+	if len(models.Blockchain().PendingTransactions) == 0 {
+		logger.Println(logger.RareError, "[Controllers/Miner] [ERROR] Tried to proceed with block creation without a transaction")
+		return createCandidateBlock()
+	}
+
 	pendingTxns := models.Blockchain().PendingTransactions
 	unusedOutputs := models.Blockchain().UnusedTransactionOutputs
 

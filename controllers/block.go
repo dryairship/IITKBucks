@@ -36,8 +36,7 @@ func newBlockHandler(c *gin.Context) {
 	c.String(200, "Block added to the blockchain")
 }
 
-func propagateBlockToPeers(block models.Block) {
-	blockBytes := block.ToByteArray()
+func propagateBlockToPeers(blockBytes []byte) {
 	buffer := bytes.NewBuffer(blockBytes)
 	client := &http.Client{}
 
@@ -75,9 +74,11 @@ func performPostNewBlockSteps(newBlock models.Block) {
 	close(currentMinerChannel)
 	currentMinerChannel = make(chan bool)
 
+	blockBytes := newBlock.ToByteArray()
+
 	models.Blockchain().ProcessBlock(newBlock)
 	models.Blockchain().AppendBlock(newBlock)
 
 	go startMining()
-	go propagateBlockToPeers(newBlock)
+	go propagateBlockToPeers(blockBytes)
 }
