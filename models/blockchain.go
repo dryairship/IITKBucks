@@ -74,19 +74,19 @@ func (blockchain *blockchain) IsTransactionValid(transaction *Transaction) (bool
 }
 
 func (blockchain *blockchain) IsBlockValid(block *Block) (bool, error) {
-	if block.Index != uint32(len(blockchain.Chain)+1) {
-		logger.Println(logger.RareError, "[Models/Blockchain] [ERROR] Block has incorrect index. Expected:", len(blockchain.Chain)+1, ", Found:", block.Index)
+	if block.Index != uint32(len(blockchain.Chain)) {
+		logger.Println(logger.RareError, "[Models/Blockchain] [ERROR] Block has incorrect index. Expected:", len(blockchain.Chain), ", Found:", block.Index)
 		return false, ERROR_INCORRECT_INDEX
 	}
 
-	parentIndex := block.Index - 1
+	parentIndex := int32(block.Index - 1)
 
-	if blockchain.Chain[parentIndex].Timestamp > block.Timestamp {
+	if parentIndex >= 0 && blockchain.Chain[parentIndex].Timestamp > block.Timestamp {
 		logger.Println(logger.RareError, "[Models/Blockchain] [ERROR] Block's timestamp is less than parent's timestamp. Parent:", blockchain.Chain[parentIndex].Timestamp, ", Block:", block.Timestamp)
 		return false, ERROR_LESS_TIMESTAMP
 	}
 
-	if blockchain.Chain[parentIndex].GetHash() != block.ParentHash {
+	if parentIndex >= 0 && blockchain.Chain[parentIndex].GetHash() != block.ParentHash {
 		logger.Println(logger.RareError, "[Models/Blockchain] [ERROR] Parent hash mismatch. Expected:", blockchain.Chain[parentIndex].GetHash(), ", Found:", block.ParentHash)
 		return false, ERROR_PARENT_HASH_MISMATCH
 	}
@@ -130,7 +130,11 @@ func (blockchain *blockchain) IsBlockValid(block *Block) (bool, error) {
 }
 
 func (blockchain *blockchain) AddTransaction(transaction Transaction) {
-	blockchain.TransactionAdded <- true
+	select {
+	case blockchain.TransactionAdded <- true:
+		logger.Println(logger.MinorEvent, "[Controllers/Blockchain] [DEBUG] Someone received the new transaction message though channel")
+	default:
+	}
 	blockchain.PendingTransactions[transaction.CalculateHash()] = transaction
 }
 

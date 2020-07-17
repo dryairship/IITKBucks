@@ -84,12 +84,6 @@ func mineBlock(block models.Block) {
 		block.Timestamp = time.Now().UnixNano()
 		if block.GetHash().IsLessThan(target) {
 			logger.Printf(logger.MajorEvent, "[Controllers/Miner] [INFO] New block mined! Index: %d, Timestamp: %d, Nonce: %d\n", block.Index, block.Timestamp, block.Nonce)
-			select {
-			case currentMinerChannel <- true:
-				logger.Println(logger.MinorEvent, "[Controllers/Miner] [DEBUG] Someone received the new block message though channel")
-			default:
-			}
-			logger.Printf(logger.MinorEvent, "[Controllers/Miner] [DEBUG] Channel closed.")
 			performPostNewBlockSteps(block)
 			return
 		}

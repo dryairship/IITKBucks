@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -31,6 +32,11 @@ func newTransactionsHandler(c *gin.Context) {
 	txn, err := body.ToTransaction()
 	if err != nil {
 		c.String(400, "JSON request body could not be converted to a Transaction object")
+		return
+	}
+
+	if models.Blockchain().IsTransactionPending(txn.CalculateHash()) {
+		c.String(200, "Already had transaction")
 		return
 	}
 
@@ -74,8 +80,7 @@ func propagateTransactionToPeers(txnBody models.TransactionRequestBody) {
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
-			var reply []byte
-			_, _ = resp.Body.Read(reply)
+			reply, _ := ioutil.ReadAll(resp.Body)
 			logger.Printf(logger.CommonError, "[Controllers/Transaction] [WARN] Peer %s gave %d response on newTransaction request. %s\n", peer, resp.StatusCode, reply)
 		} else {
 			count++

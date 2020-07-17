@@ -71,7 +71,7 @@ func InputFromByteArray(data []byte) (Input, int, error) {
 		return Input{}, 0, ERROR_INSUFFICIENT_DATA
 	}
 
-	sign := Signature(data[40:sigSize])
+	sign := Signature(data[40 : sigSize+40])
 
 	return Input{
 		TransactionId: txnID,

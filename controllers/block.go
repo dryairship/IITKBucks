@@ -3,6 +3,7 @@ package controllers
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,9 +13,8 @@ import (
 )
 
 func newBlockHandler(c *gin.Context) {
-	var body []byte
-	numBytes, err := c.Request.Body.Read(body)
-	if err != nil || numBytes == 0 {
+	body, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil || len(body) == 0 {
 		c.String(400, "Error while reading request body")
 		return
 	}
@@ -23,6 +23,16 @@ func newBlockHandler(c *gin.Context) {
 	if err != nil {
 		c.String(400, "Given bytes could not be converted to a block")
 		return
+	}
+
+	if block.Index != uint32(len(models.Blockchain().Chain)) {
+		if block.GetHash() == models.Blockchain().Chain[block.Index].GetHash() {
+			c.String(200, "Already have the block")
+			return
+		} else {
+			c.String(400, "Have another block at the same index")
+			return
+		}
 	}
 
 	isValid, err := models.Blockchain().IsBlockValid(&block)
@@ -58,8 +68,7 @@ func propagateBlockToPeers(blockBytes []byte) {
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
-			var reply []byte
-			_, _ = resp.Body.Read(reply)
+			reply, _ := ioutil.ReadAll(resp.Body)
 			logger.Printf(logger.RareError, "[Controllers/Block] [WARN] Peer %s gave %d response on newBlock request. %s\n", peer, resp.StatusCode, reply)
 		} else {
 			count++
@@ -72,13 +81,13 @@ func performPostNewBlockSteps(newBlock models.Block) {
 	logger.Println(logger.MinorEvent, "[Controllers/Block] [TRACE] Performing post new block steps.")
 
 	close(currentMinerChannel)
-	currentMinerChannel = make(chan bool)
 
 	blockBytes := newBlock.ToByteArray()
 
 	models.Blockchain().ProcessBlock(newBlock)
 	models.Blockchain().AppendBlock(newBlock)
 
+	currentMinerChannel = make(chan bool)
 	go startMining()
 	go propagateBlockToPeers(blockBytes)
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -68,6 +69,10 @@ func newPeerHandler(c *gin.Context) {
 }
 
 func makeGetPeersRequest(peer string) {
+	if strings.Contains(peer, "127.0.0.1") || strings.Contains(peer, "localhost") || strings.Contains(config.MY_URL, peer) {
+		return
+	}
+
 	response, err := http.Get(fmt.Sprintf("%s/getPeers", peer))
 	if err != nil {
 		logger.Println(logger.RareError, "[Controllers/Peers] [WARN] go HTTP error while asking for peers. Peer:", peer, ", Error:", err)
@@ -75,8 +80,7 @@ func makeGetPeersRequest(peer string) {
 	}
 
 	defer response.Body.Close()
-	var bodyBytes []byte
-	_, err = response.Body.Read(bodyBytes)
+	bodyBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		logger.Println(logger.RareError, "[Controllers/Peers] [WARN] Cannot read getPeers response body. Peer:", peer, ". Error:", err)
 		return
@@ -92,12 +96,16 @@ func makeGetPeersRequest(peer string) {
 	potentialPeers = append(potentialPeers, body.Peers...)
 }
 
-func makeNewPeerRequest(peer string) {
-	var jsonStr = []byte(fmt.Sprintf(`"url":"%s"}`, config.MY_URL))
+func makeNewPeerRequest(peer string) bool {
+	if strings.Contains(peer, "127.0.0.1") || strings.Contains(peer, "localhost") || strings.Contains(config.MY_URL, peer) {
+		return false
+	}
+
+	var jsonStr = []byte(fmt.Sprintf(`{"url":"%s"}`, config.MY_URL))
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/newPeer", peer), bytes.NewBuffer(jsonStr))
 	if err != nil {
 		logger.Println(logger.RareError, "[Controllers/Peers] [WARN] go HTTP error while builing newPeer request. Peer:", peer, ", Error:", err)
-		return
+		return false
 	}
 	req.Header.Set("Content-Type", "application/json")
 
@@ -105,12 +113,18 @@ func makeNewPeerRequest(peer string) {
 	resp, err := client.Do(req)
 	if err != nil {
 		logger.Println(logger.CommonError, "[Controllers/Peers] [WARN] go HTTP error while making newPeer request. Peer:", peer, ", Error:", err)
-		return
+		return false
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusOK {
 		peers = append(peers, peer)
+		logger.Println(logger.CommonError, "[Controllers/Peers] [INFO] Added new peer by sending request:", peer)
+		return true
+	} else {
+		reason, _ := ioutil.ReadAll(resp.Body)
+		logger.Println(logger.CommonError, "[Controllers/Peers] [ERROR] newPeer request rejected. Reason:", string(reason), ", Peer:", peer, ", Code:", resp.StatusCode)
+		return false
 	}
 }
 
@@ -138,13 +152,12 @@ func tryToAddPeers(c chan bool) {
 			continue
 		}
 
-		makeNewPeerRequest(nextPeer)
-		makeGetPeersRequest(nextPeer)
-
-		if !added && len(peers) > 1 {
+		if makeNewPeerRequest(nextPeer) && !added {
 			added = true
 			c <- true
 		}
+
+		makeGetPeersRequest(nextPeer)
 	}
 
 	c <- false
