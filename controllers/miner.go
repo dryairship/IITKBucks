@@ -29,25 +29,26 @@ func createCandidateBlock() models.Block {
 		return createCandidateBlock()
 	}
 
-	pendingTxns := models.Blockchain().PendingTransactions
-	unusedOutputs := models.Blockchain().UnusedTransactionOutputs
+	usedOutputs := make(models.OutputMap)
 
 	coinbaseTxn := createCoinbaseTransaction()
 	currentTxns := models.TransactionList{coinbaseTxn}
 	currentSize := len(coinbaseTxn.ToByteArray())
 
 	var pair models.TransactionIdIndexPair
-	for _, txn := range pendingTxns {
+	for key, txn := range models.Blockchain().PendingTransactions {
 		inputSum := models.Coins(0)
 		isTxnValid := true
 		for _, input := range txn.Inputs {
 			pair.TransactionId = input.TransactionId
 			pair.Index = input.OutputIndex
-			input, exists := unusedOutputs[pair]
-			if !exists {
+			input, exists := models.Blockchain().UnusedTransactionOutputs[pair]
+			_, used := usedOutputs[pair]
+			if !exists || used {
 				isTxnValid = false
 				break
 			}
+			usedOutputs[pair] = input
 			inputSum += input.Amount
 		}
 
@@ -58,7 +59,13 @@ func createCandidateBlock() models.Block {
 			} else {
 				break
 			}
+		} else {
+			delete(models.Blockchain().PendingTransactions, key)
 		}
+	}
+
+	if len(currentTxns) == 1 {
+		return createCandidateBlock()
 	}
 
 	index := len(models.Blockchain().Chain)
@@ -83,7 +90,8 @@ func mineBlock(block models.Block) {
 		block.Nonce = i
 		block.Timestamp = time.Now().UnixNano()
 		if block.GetHash().IsLessThan(target) {
-			logger.Printf(logger.MajorEvent, "[Controllers/Miner] [INFO] New block mined! Index: %d, Timestamp: %d, Nonce: %d\n", block.Index, block.Timestamp, block.Nonce)
+			logger.Printf(logger.MajorEvent, "[Controllers/Miner] [INFO] New block mined! Index: %d, Timestamp: %d, Nonce: %d, Number of Transaction: %d\n",
+				block.Index, block.Timestamp, block.Nonce, len(block.Transactions))
 			performPostNewBlockSteps(block)
 			return
 		}

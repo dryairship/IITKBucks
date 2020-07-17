@@ -25,7 +25,7 @@ func newBlockHandler(c *gin.Context) {
 		return
 	}
 
-	if block.Index != uint32(len(models.Blockchain().Chain)) {
+	if block.Index < uint32(len(models.Blockchain().Chain)) {
 		if block.GetHash() == models.Blockchain().Chain[block.Index].GetHash() {
 			c.String(200, "Already have the block")
 			return
@@ -47,12 +47,14 @@ func newBlockHandler(c *gin.Context) {
 }
 
 func propagateBlockToPeers(blockBytes []byte) {
-	buffer := bytes.NewBuffer(blockBytes)
 	client := &http.Client{}
 
 	count := 0
 
 	for _, peer := range peers {
+		tmpCopy := make([]byte, len(blockBytes))
+		copy(tmpCopy, blockBytes)
+		buffer := bytes.NewBuffer(tmpCopy)
 		req, err := http.NewRequest("POST", fmt.Sprintf("%s/newBlock", peer), buffer)
 		if err != nil {
 			logger.Println(logger.RareError, "[Controllers/Block] [WARN] go HTTP error while builing newBlock request. Peer: ", peer, ", Error: ", err)
@@ -69,7 +71,7 @@ func propagateBlockToPeers(blockBytes []byte) {
 
 		if resp.StatusCode != http.StatusOK {
 			reply, _ := ioutil.ReadAll(resp.Body)
-			logger.Printf(logger.RareError, "[Controllers/Block] [WARN] Peer %s gave %d response on newBlock request. %s\n", peer, resp.StatusCode, reply)
+			logger.Printf(logger.RareError, "[Controllers/Block] [WARN] Peer %s gave %d response on newBlock request. %s\n", peer, resp.StatusCode, string(reply[:32]))
 		} else {
 			count++
 		}

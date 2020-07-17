@@ -123,7 +123,7 @@ func makeNewPeerRequest(peer string) bool {
 		return true
 	} else {
 		reason, _ := ioutil.ReadAll(resp.Body)
-		logger.Println(logger.CommonError, "[Controllers/Peers] [ERROR] newPeer request rejected. Reason:", string(reason), ", Peer:", peer, ", Code:", resp.StatusCode)
+		logger.Println(logger.CommonError, "[Controllers/Peers] [ERROR] newPeer request rejected. Reason:", string(reason[:32]), ", Peer:", peer, ", Code:", resp.StatusCode)
 		return false
 	}
 }

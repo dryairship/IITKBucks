@@ -58,19 +58,20 @@ func propagateTransactionToPeers(txnBody models.TransactionRequestBody) {
 		return
 	}
 
-	buffer := bytes.NewBuffer(jsonString)
 	client := &http.Client{}
 
 	count := 0
 
 	for _, peer := range peers {
+		tmpCopy := make([]byte, len(jsonString))
+		copy(tmpCopy, jsonString)
+		buffer := bytes.NewBuffer(tmpCopy)
 		req, err := http.NewRequest("POST", fmt.Sprintf("%s/newTransaction", peer), buffer)
-		req.Header.Set("Content-Type", "application/json")
 		if err != nil {
 			logger.Println(logger.RareError, "[Controllers/Transaction] [WARN] go HTTP error while builing newTransaction request. Peer: ", peer, ", Error: ", err)
 			continue
 		}
-		req.Header.Set("Content-Type", "application/octet-stream")
+		req.Header.Set("Content-Type", "application/json")
 
 		resp, err := client.Do(req)
 		if err != nil {
@@ -81,7 +82,7 @@ func propagateTransactionToPeers(txnBody models.TransactionRequestBody) {
 
 		if resp.StatusCode != http.StatusOK {
 			reply, _ := ioutil.ReadAll(resp.Body)
-			logger.Printf(logger.CommonError, "[Controllers/Transaction] [WARN] Peer %s gave %d response on newTransaction request. %s\n", peer, resp.StatusCode, reply)
+			logger.Printf(logger.CommonError, "[Controllers/Transaction] [WARN] Peer %s gave %d response on newTransaction request. %s\n", peer, resp.StatusCode, reply[:32])
 		} else {
 			count++
 		}
