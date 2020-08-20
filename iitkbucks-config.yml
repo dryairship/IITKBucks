@@ -1,10 +1,10 @@
 port: 8000
 
-blocksPath: ./blocks
-frontendPath: ./frontend/build
+blocksPath: /iitkbucks/blocks
+frontendPath: /iitkbucks/frontend
 
 myUrl: "http://localhost:8000"
-myPublicKeyFile: "./keys/public.pem"
+myPublicKeyFile: "/iitkbucks/my_public.pem"
 
 isPro: true
 initialTarget: "00000f0000000000000000000000000000000000000000000000000000000000"
@@ -14,4 +14,4 @@ logLevel: 4
 
 maxPeers: 5
 potentialPeers:
-  - "http://localhost:8001"
+  - "https://iitkbucks.pclub.in"

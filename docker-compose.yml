@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  iitkbucks:
+    image: dryairship/iitkbucks
+    volumes:
+      - ./iitkbucks-config.yml:/iitkbucks/iitkbucks-config.yml
+      - ./my_public.pem:/iitkbucks/my_public.pem
+    ports:
+      - "8000:8000"
